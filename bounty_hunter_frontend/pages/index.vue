@@ -2,7 +2,9 @@
   <div>
     <h1>zkSync + wagmi + Nuxt 3</h1>
 
-    <BountyTable />
+    <BountyTable repo="matter-labs/zksync-era"/>
+
+    <Github repo="matter-labs/zksync-era"/>
 
     <Connect />
 
