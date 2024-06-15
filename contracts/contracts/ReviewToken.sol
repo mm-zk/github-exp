@@ -15,7 +15,7 @@ contract ReviewToken is ERC20Burnable {
      * You can edit these values as needed.
      */
     constructor() ERC20("ReviewToken", "RVW") {
-        // Default initial supply of 1 million tokens (without decimals).
+        // Default initial supply of 1 billion tokens (without decimals).
         uint256 initialSupply = 1_000_000_000;
 
         // The initial supply is minted to the deployer's address

@@ -15,7 +15,7 @@ contract ZKsyncDevNFT is ERC721Enumerable, Ownable {
     constructor() ERC721("ZKSync Contributor", "ZKSyncDev") {}
 
     function _baseURI() internal view virtual override returns (string memory) {
-        return "http://github.com/matter-labs/zksync-era";
+        return "http://github.com/matter-labs/zksync-era/";
     }
 
     /**
