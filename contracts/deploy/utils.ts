@@ -13,7 +13,7 @@ dotenv.config();
 export const getProvider = () => {
   const rpcUrl = hre.network.config.url;
   if (!rpcUrl) throw `⛔️ RPC URL wasn't found in "${hre.network.name}"! Please add a "url" field to the network config in hardhat.config.ts`;
-  
+
   // Initialize zkSync Provider
   const provider = new Provider(rpcUrl);
 
@@ -27,7 +27,7 @@ export const getWallet = (privateKey?: string) => {
   }
 
   const provider = getProvider();
-  
+
   // Initialize zkSync Wallet
   const wallet = new Wallet(privateKey ?? process.env.WALLET_PRIVATE_KEY!, provider);
 
@@ -67,7 +67,7 @@ type DeployContractOptions = {
   noVerify?: boolean
   /**
    * If specified, the contract will be deployed using this wallet
-   */ 
+   */
   wallet?: Wallet
 }
 export const deployContract = async (contractArtifactName: string, constructorArguments?: any[], options?: DeployContractOptions) => {
@@ -76,7 +76,8 @@ export const deployContract = async (contractArtifactName: string, constructorAr
   }
 
   log(`\nStarting deployment process of "${contractArtifactName}"...`);
-  
+  log(`${hre.network.config.url}`);
+
   const wallet = options?.wallet ?? getWallet();
   const deployer = new Deployer(hre, wallet);
   const artifact = await deployer.loadArtifact(contractArtifactName).catch((error) => {
