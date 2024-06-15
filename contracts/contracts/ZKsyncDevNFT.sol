@@ -30,5 +30,17 @@ contract ZKsyncDevNFT is ERC721Enumerable, Ownable {
         _mint(to, uint256(keccak256(abi.encode(githubUsername))));
     }
 
+    function exists(
+        string calldata githubUsername
+    ) external view returns (bool) {
+        return _exists(uint256(keccak256(abi.encode(githubUsername))));
+    }
+
+    function githubToToken(
+        string calldata githubUsername
+    ) external pure returns (uint256) {
+        return uint256(keccak256(abi.encode(githubUsername)));
+    }
+
     // Additional functions or overrides can be added here if needed.
 }

@@ -52,8 +52,11 @@ const props = defineProps<
     
     let inputValue = '';
 
+    
+
     const confirm = () => {
       console.log('Confirmed!');
+      sendTransaction();
       // Handle your logic here after confirmation
     };
 
@@ -69,6 +72,21 @@ const props = defineProps<
         showOverlay.value = false;
         
     }
+
+    const { result: transaction, execute: sendTransaction, inProgress, error} = useAsync(async () => {
+        console.log("Sending transaction...");
+        const result = await wagmiSendTransaction({
+            to: '0xc981b213603171963F81C687B9fC880d33CaeD16',
+            value: parseEther('1'),
+        });
+        console.log(result.hash);
+        waitForReceipt(result.hash);
+        return result;
+    });
+
+    const { result: receipt, execute: waitForReceipt, inProgress: receiptInProgress, error: receiptError} = useAsync(async (transactionHash) => {
+        return await waitForTransaction({ hash: transactionHash });
+    });
 
     
 
