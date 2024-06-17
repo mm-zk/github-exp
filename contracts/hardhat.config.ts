@@ -1,6 +1,8 @@
 import { HardhatUserConfig } from "hardhat/config";
 
 import "@matterlabs/hardhat-zksync";
+import "@nomicfoundation/hardhat-chai-matchers";
+
 
 const config: HardhatUserConfig = {
   defaultNetwork: "inMemoryNode",
