@@ -93,15 +93,25 @@ contract GitHubOracle is IGitHubOracle, IPaymaster {
     function validateAndPayForPaymasterTransaction(
         bytes32,
         bytes32,
-        Transaction calldata _transaction
+        Transaction calldata transaction
     )
         external
         payable
         onlyBootloader
         returns (bytes4 magic, bytes memory context)
     {
+        require(
+            address(uint160(transaction.to)) == address(this),
+            "Will not pay for this transaction"
+        );
+        require(
+            authorizedUpdaters[address(uint160(transaction.from))] == true,
+            "Sender not authorized"
+        );
+
+        context = "";
         magic = PAYMASTER_VALIDATION_SUCCESS_MAGIC;
-        uint256 requiredETH = _transaction.gasLimit * _transaction.maxFeePerGas;
+        uint256 requiredETH = transaction.gasLimit * transaction.maxFeePerGas;
 
         // The bootloader never returns any data, so it can safely be ignored here.
         (bool success, ) = payable(BOOTLOADER_FORMAL_ADDRESS).call{

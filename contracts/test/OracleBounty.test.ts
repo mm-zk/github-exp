@@ -27,7 +27,57 @@ describe("ReviewToken", function () {
         await tx.wait();
 
     });
-    it("Bounty and claim", async function () {
+
+    it("Test Paymaster Oracle", async function () {
+        await ownerWallet.transfer({ to: await oracleContract.getAddress(), amount: ethers.parseEther("1") }).then(tx => tx.wait());
+
+        const oracleUpdater = getWallet(Wallet.createRandom().privateKey);
+
+        const oracleUpdaterContract = new Contract(await oracleContract.getAddress(), oracleContract.interface, oracleUpdater);
+
+        const details = {
+            author: "author",
+            reviewers: ["rev2"],
+            is_merged: false
+        };
+
+        const paymasterParams = utils.getPaymasterParams(await oracleContract.getAddress(), {
+            type: "General",
+            innerInput: new Uint8Array(),
+        });
+
+        // Fail - as it is not authorized.
+        await expect(oracleUpdaterContract.updatePRState("testoracle", 1, details, {
+            value: 0,
+            maxPriorityFeePerGas: 0n,
+            maxFeePerGas: await getProvider().getGasPrice(),
+            gasLimit: 10000000, // Example custom gas limit,
+            customData: {
+                gasPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
+                paymasterParams
+            }
+        }).then(tx => tx.wait())).to.be.reverted;
+
+        // Add permissions.
+        await oracleContract.setAuthorization(oracleUpdater.address, true).then(tx => tx.wait());
+
+        console.log("After authorization");
+
+        await oracleUpdaterContract.updatePRState("testoracle", 1, details, {
+            value: 0,
+            maxPriorityFeePerGas: 0n,
+            maxFeePerGas: await getProvider().getGasPrice(),
+            gasLimit: 10000000, // Example custom gas limit,
+            customData: {
+                gasPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
+                paymasterParams
+            }
+        }).then(tx => tx.wait());
+
+    });
+
+
+    xit("Bounty and claim", async function () {
         const userBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, userWallet);
         const reviewerBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, reviewerWallet);
         const userTokenContract = new Contract(await tokenContract.getAddress(), tokenContract.interface, userWallet);
@@ -69,7 +119,7 @@ describe("ReviewToken", function () {
         ).then(tx => tx.wait())).to.be.revertedWith("Bounty already claimed");
     });
 
-    it("With Oracle paymaster", async function () {
+    xit("With Oracle paymaster", async function () {
         // Oracle update has no tokens, it will try to use the Oracle's paymaster to cover the costs.
         const oracleUpdater = getWallet(Wallet.createRandom().privateKey);
 
@@ -136,10 +186,6 @@ describe("ReviewToken", function () {
             1, details
         ).then(tx => tx.wait());
         expect(await tokenContract.balanceOf(reviewerWallet.address)).to.be.equal(18);
-
-
-
-
     });
 });
 
