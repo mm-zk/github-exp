@@ -90,6 +90,8 @@ contract GitHubOracle is IGitHubOracle, IPaymaster {
         require(prStates[repository][prId] == stateHash, "State hash differs");
     }
 
+    // Paymaster will pay for any method call into this contract, assuming that
+    // it comes from authorized user.
     function validateAndPayForPaymasterTransaction(
         bytes32,
         bytes32,

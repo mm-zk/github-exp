@@ -107,6 +107,8 @@ contract CodeReviewBounties {
             details
         );
 
+        require(details.is_merged, "PR is not merged yet");
+
         bounty.claimed = true;
         require(
             IERC20(bounty.erc20Token).transfer(bounty.receiver, bounty.amount),
