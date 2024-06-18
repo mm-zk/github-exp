@@ -1,15 +1,16 @@
-This is a [zkSync](https://zksync.io) + [wagmi](https://wagmi.sh) + [Nuxt 3](https://nuxt.com) project bootstrapped with [`zksync-cli`](https://github.com/matter-labs/zksync-cli)
+# Frontend
 
-# Getting Started
 
-Run `npm run dev` in your terminal, and then open [localhost:3000](http://localhost:3000) in your browser.
+Frontend to manage the bounties for different PRs (and in future also permissions).
 
-Once the webpage has loaded, changes made to files inside the project directory (e.g. `/pages/index.vue`) will automatically update the webpage.
 
-# Learn more
+## Components
 
-To learn more about [zkSync](https://zksync.io) or [wagmi](https://wagmi.sh), check out the following resources:
+### Github.vue
+Displays a list of recent PRs, and tries to collect the information about the bounties.
 
-- [zkSync Documentation](https://era.zksync.io/docs/dev) – learn about zkSync features and API.
-- [wagmi Documentation](https://wagmi.sh) – learn about wagmi Hooks and API.
-- [Nuxt Documentation](https://nuxt.com/docs/getting-started/introduction) learn about Nuxt features and API.
+### AddBounty.vue
+Displays the dialog box to add a new bounty.
+
+### ShowBounty.vue
+Will display info about the bounties for a given PR.
