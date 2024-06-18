@@ -5,11 +5,12 @@
     <Connect />
 
     <Connected>
-    <Github repo="matter-labs/zksync-era"/>
+    <Github :repo=repo />
     </Connected>
   </div>
 </template>
 
 <script lang="ts" setup>
 useWagmi();
+const repo = import.meta.env.VITE_API_TARGET_REPO;
 </script>
