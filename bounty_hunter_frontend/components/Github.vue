@@ -1,18 +1,5 @@
 <template>
   <div>
-    <h1>Pull Requests for {{ repo }}</h1>
-    <div v-if="loading">Loading...</div>
-    <div v-else-if="error">{{ error }}</div>
-    <div v-else>
-      <ul>
-        <li v-for="pr in pullRequests" :key="pr.id">
-          #{{ pr.number }} - {{ pr.title }} by {{ pr.user.login }}
-          ({{ pr.state }}, {{ new Date(pr.created_at).toLocaleDateString() }})
-        </li>
-      </ul>
-    </div>
-  </div>
-  <div>
     <table>
       <thead>
         <tr>
