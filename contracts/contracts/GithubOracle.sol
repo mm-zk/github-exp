@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from "@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymaster.sol";
+import {TransactionHelper, Transaction} from "@matterlabs/zksync-contracts/l2/system-contracts/libraries/TransactionHelper.sol";
+import "@matterlabs/zksync-contracts/l2/system-contracts/Constants.sol";
+
 struct PRDetails {
     string author;
     string[] reviewers;
@@ -15,9 +19,18 @@ interface IGitHubOracle {
     ) external view;
 }
 
-contract GitHubOracle is IGitHubOracle {
+contract GitHubOracle is IGitHubOracle, IPaymaster {
     address public owner;
     mapping(address => bool) public authorizedUpdaters;
+
+    modifier onlyBootloader() {
+        require(
+            msg.sender == BOOTLOADER_FORMAL_ADDRESS,
+            "Only bootloader can call this method"
+        );
+        // Continue execution if called from the bootloader.
+        _;
+    }
 
     // Mapping to store keccak hash of PR details by repo and PR ID
     mapping(string => mapping(uint256 => bytes32)) public prStates;
@@ -50,7 +63,10 @@ contract GitHubOracle is IGitHubOracle {
     }
 
     // Users can request updates for a PR
-    function requestPRUpdate(string calldata repository, uint256 prId) public {
+    function requestPRUpdate(
+        string calldata repository,
+        uint256 prId
+    ) public payable {
         emit PRUpdateRequested(repository, prId);
     }
 
@@ -73,4 +89,38 @@ contract GitHubOracle is IGitHubOracle {
         bytes32 stateHash = keccak256(abi.encode(details));
         require(prStates[repository][prId] == stateHash, "State hash differs");
     }
+
+    function validateAndPayForPaymasterTransaction(
+        bytes32,
+        bytes32,
+        Transaction calldata _transaction
+    )
+        external
+        payable
+        onlyBootloader
+        returns (bytes4 magic, bytes memory context)
+    {
+        magic = PAYMASTER_VALIDATION_SUCCESS_MAGIC;
+        uint256 requiredETH = _transaction.gasLimit * _transaction.maxFeePerGas;
+
+        // The bootloader never returns any data, so it can safely be ignored here.
+        (bool success, ) = payable(BOOTLOADER_FORMAL_ADDRESS).call{
+            value: requiredETH
+        }("");
+        require(
+            success,
+            "Failed to transfer tx fee to the Bootloader. Paymaster balance might not be enough."
+        );
+    }
+
+    function postTransaction(
+        bytes calldata _context,
+        Transaction calldata _transaction,
+        bytes32,
+        bytes32,
+        ExecutionResult _txResult,
+        uint256 _maxRefundedGas
+    ) external payable override onlyBootloader {}
+
+    receive() external payable {}
 }

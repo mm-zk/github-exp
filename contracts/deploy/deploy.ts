@@ -8,6 +8,8 @@ export default async function () {
   await deployContract("ReviewToken");
   await deployContract("ZKsyncDevNFT");
 
+  await deployContract("GitHubOracle");
+
 
   const contractArtifactName = "Greeter";
   const constructorArguments = ["Hi there!"];
