@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { Contract, Wallet } from "zksync-ethers";
-import { getWallet, deployContract, LOCAL_RICH_WALLETS } from '../deploy/utils';
-import * as ethers from "ethers";
+import { Contract, Wallet, utils } from "zksync-ethers";
+import { getWallet, deployContract, LOCAL_RICH_WALLETS, getProvider } from '../deploy/utils';
+import { ethers } from "ethers";
 
 describe("ReviewToken", function () {
     let oracleContract: Contract;
@@ -67,6 +67,79 @@ describe("ReviewToken", function () {
         await expect(reviewerBountyContract.claimBounty(
             0, details
         ).then(tx => tx.wait())).to.be.revertedWith("Bounty already claimed");
+    });
+
+    it("With Oracle paymaster", async function () {
+        // Oracle update has no tokens, it will try to use the Oracle's paymaster to cover the costs.
+        const oracleUpdater = getWallet(Wallet.createRandom().privateKey);
+
+        const oracleUpdaterContract = new Contract(await oracleContract.getAddress(), oracleContract.interface, oracleUpdater);
+
+        // Add permissions.
+        await oracleContract.setAuthorization(oracleUpdater.address, true).then(tx => tx.wait());
+
+        const userBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, userWallet);
+        const reviewerBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, reviewerWallet);
+        const userTokenContract = new Contract(await tokenContract.getAddress(), tokenContract.interface, userWallet);
+
+        const reviewerOracleContract = new Contract(await oracleContract.getAddress(), oracleContract.interface, reviewerWallet);
+
+        await userTokenContract.approve(await bountyContract.getAddress(), 8).then(tx => tx.wait());
+        // Create a bounty.
+        await userBountyContract.addBounty(
+            "repo1", 3, reviewerWallet.address, 8, tokenContract
+        ).then(tx => tx.wait());
+
+        const details = {
+            author: "author",
+            reviewers: ["rev2"],
+            is_merged: false
+        };
+
+        // This will fail, as the state is not updated yet.
+        await expect(reviewerBountyContract.claimBounty(
+            1, details
+        ).then(tx => tx.wait())).to.be.revertedWith("State hash differs");
+
+
+        // This will fail due to out of gas (as oracleUpdater has no tokens).
+        await expect(oracleUpdaterContract.updatePRState("repo1", 3, details).then(tx => tx.wait())).to.be.reverted;
+
+
+        await reviewerOracleContract.requestPRUpdate("repo1", 3, {
+            value: ethers.parseEther("0.01")
+        }).then(tx => tx.wait());
+
+
+        const balance = await getProvider().getBalance(await oracleContract.getAddress());
+        const paymasterParams = utils.getPaymasterParams(await oracleContract.getAddress(), {
+            type: "General",
+            innerInput: new Uint8Array(),
+        });
+
+        // Now the state is updated.
+        await oracleUpdaterContract.updatePRState("repo1", 3, details, {
+            value: 0,
+            maxPriorityFeePerGas: 0n,
+            maxFeePerGas: await getProvider().getGasPrice(),
+            gasLimit: 10000000, // Example custom gas limit,
+            customData: {
+                gasPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
+                paymasterParams
+            }
+        }).then(tx => tx.wait());
+
+        // And now reviewer can get the bounty.
+
+        expect(await tokenContract.balanceOf(reviewerWallet.address)).to.be.equal(10);
+        await reviewerBountyContract.claimBounty(
+            1, details
+        ).then(tx => tx.wait());
+        expect(await tokenContract.balanceOf(reviewerWallet.address)).to.be.equal(18);
+
+
+
+
     });
 });
 
