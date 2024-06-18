@@ -4,9 +4,10 @@ import * as dotenv from 'dotenv';
 const axios = require('axios');
 
 dotenv.config();
+dotenv.config({ path: '../contracts/.generated.env' });
 
 const DEV_NFT_ADDRESS = {
-    address: "0x1011959EE8299b0e9900036D27Ca7EfF0C54DFF6" as Hex,
+    address: process.env.NFT_TOKEN_ADDRESS! as Hex,
 }
 
 
