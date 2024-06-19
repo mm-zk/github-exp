@@ -107,7 +107,7 @@ contract CodeReviewBounties {
             details
         );
 
-        require(details.is_merged, "PR is not merged yet");
+        require(details.isMergedToMain, "PR is not merged yet");
 
         bounty.claimed = true;
         require(

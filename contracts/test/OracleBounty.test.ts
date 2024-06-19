@@ -42,9 +42,14 @@ describe("ReviewToken", function () {
         expect(await tokenContract.balanceOf(reviewerWallet.address)).to.be.equal(0);
 
         let details = {
-            author: "author",
-            reviewers: ["rev1"],
-            is_merged: false
+            author: 113,
+            approvals: [{
+                reviewer: 188,
+                reviewerDuration: 0,
+                authorDuration: 0,
+            }
+            ],
+            isMergedToMain: false
         };
 
         // This should fail with 'wrong sender'
@@ -57,15 +62,15 @@ describe("ReviewToken", function () {
             0, details
         ).then(tx => tx.wait())).to.be.revertedWith("State hash differs");
 
-        await oracleContract.updatePRState("repo1", 1, details).then(tx => tx.wait());
+        await oracleContract.updatePRState("repo1", 1, 100, details).then(tx => tx.wait());
 
         await expect(reviewerBountyContract.claimBounty(
             0, details
         ).then(tx => tx.wait())).to.be.revertedWith("PR is not merged yet");
 
-        details.is_merged = true;
+        details.isMergedToMain = true;
 
-        await oracleContract.updatePRState("repo1", 1, details).then(tx => tx.wait());
+        await oracleContract.updatePRState("repo1", 1, 101, details).then(tx => tx.wait());
 
         await reviewerBountyContract.claimBounty(
             0, details
@@ -100,10 +105,16 @@ describe("ReviewToken", function () {
             "repo1", 3, reviewerWallet.address, 8, tokenContract
         ).then(tx => tx.wait());
 
-        const details = {
-            author: "author",
-            reviewers: ["rev2"],
-            is_merged: true
+
+        let details = {
+            author: 113,
+            approvals: [{
+                reviewer: 188,
+                reviewerDuration: 0,
+                authorDuration: 0,
+            }
+            ],
+            isMergedToMain: true
         };
 
         // This will fail, as the state is not updated yet.
@@ -113,7 +124,7 @@ describe("ReviewToken", function () {
 
 
         // This will fail due to out of gas (as oracleUpdater has no tokens).
-        await expect(oracleUpdaterContract.updatePRState("repo1", 3, details).then(tx => tx.wait())).to.be.reverted;
+        await expect(oracleUpdaterContract.updatePRState("repo1", 3, 99, details).then(tx => tx.wait())).to.be.reverted;
 
 
         await reviewerOracleContract.requestPRUpdate("repo1", 3, {
@@ -128,7 +139,7 @@ describe("ReviewToken", function () {
         });
 
         // Now the state is updated.
-        await oracleUpdaterContract.updatePRState("repo1", 3, details, {
+        await oracleUpdaterContract.updatePRState("repo1", 3, 150, details, {
             value: 0,
             maxPriorityFeePerGas: 0n,
             maxFeePerGas: await getProvider().getGasPrice(),
@@ -156,10 +167,16 @@ describe("ReviewToken", function () {
 
         const oracleUpdaterContract = new Contract(await oracleContract.getAddress(), oracleContract.interface, oracleUpdater);
 
-        const details = {
-            author: "author",
-            reviewers: ["rev2"],
-            is_merged: false
+
+        let details = {
+            author: 113,
+            approvals: [{
+                reviewer: 188,
+                reviewerDuration: 0,
+                authorDuration: 0,
+            }
+            ],
+            isMergedToMain: false
         };
 
         const paymasterParams = utils.getPaymasterParams(await oracleContract.getAddress(), {
@@ -168,7 +185,7 @@ describe("ReviewToken", function () {
         });
 
         // Fail - as it is not authorized.
-        await expect(oracleUpdaterContract.updatePRState("testoracle", 1, details, {
+        await expect(oracleUpdaterContract.updatePRState("testoracle", 1, 180, details, {
             value: 0,
             maxPriorityFeePerGas: 0n,
             maxFeePerGas: await getProvider().getGasPrice(),
@@ -182,7 +199,7 @@ describe("ReviewToken", function () {
         // Add permissions.
         await oracleContract.setAuthorization(oracleUpdater.address, true).then(tx => tx.wait());
 
-        await oracleUpdaterContract.updatePRState("testoracle", 1, details, {
+        await oracleUpdaterContract.updatePRState("testoracle", 1, 184, details, {
             value: 0,
             maxPriorityFeePerGas: 0n,
             maxFeePerGas: await getProvider().getGasPrice(),

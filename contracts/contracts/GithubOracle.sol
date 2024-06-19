@@ -5,10 +5,23 @@ import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from "@
 import {TransactionHelper, Transaction} from "@matterlabs/zksync-contracts/l2/system-contracts/libraries/TransactionHelper.sol";
 import "@matterlabs/zksync-contracts/l2/system-contracts/Constants.sol";
 
+// Reviewer that approved the pr.
+struct ApprovedReviewer {
+    // Keccak of the reviewer username (first 16 bytes).
+    uint128 reviewer;
+    // Time that reviewer took (in milliseconds).
+    uint64 reviewerDuration;
+    // Time that author spent (in milliseconds).
+    uint64 authorDuration;
+}
+
 struct PRDetails {
-    string author;
-    string[] reviewers;
-    bool is_merged;
+    // Keccak of the author username (first 16 bytes).
+    uint128 author;
+    // Whether the PR is merged into main branch.
+    bool isMergedToMain;
+    // Reviewers that approved it.
+    ApprovedReviewer[] approvals;
 }
 
 interface IGitHubOracle {
@@ -33,7 +46,7 @@ contract GitHubOracle is IGitHubOracle, IPaymaster {
     }
 
     // Mapping to store keccak hash of PR details by repo and PR ID
-    mapping(string => mapping(uint256 => bytes32)) public prStates;
+    mapping(bytes32 => bytes32) public prStates;
 
     // Events
     event PRUpdateRequested(string repository, uint256 prId);
@@ -70,14 +83,33 @@ contract GitHubOracle is IGitHubOracle, IPaymaster {
         emit PRUpdateRequested(repository, prId);
     }
 
+    // Packs the hash of the details into the 192 bits, and timestamp into remaining 64 bits.
+    function hashAndPack(
+        PRDetails calldata details,
+        uint64 timestamp
+    ) internal pure returns (bytes32) {
+        // Compute the Keccak-256 hash of the struct
+        bytes32 structHash = keccak256(abi.encode(details));
+
+        // Extract the first 192 bits (24 bytes) of the hash
+        bytes24 truncatedHash = bytes24(structHash);
+
+        // Pack the truncated hash and the timestamp into a 32-byte array
+        bytes32 packedData = bytes32(truncatedHash) |
+            (bytes32(uint256(timestamp)));
+
+        return packedData;
+    }
+
     // Authorized updaters can submit PR state
     function updatePRState(
         string calldata repository,
         uint256 prId,
+        uint64 updateTimestamp,
         PRDetails calldata details
     ) public onlyAuthorized {
-        bytes32 stateHash = keccak256(abi.encode(details));
-        prStates[repository][prId] = stateHash;
+        bytes32 stateHash = hashAndPack(details, updateTimestamp);
+        prStates[keccak256(abi.encodePacked(repository, prId))] = stateHash;
         emit PRStateUpdated(repository, prId, stateHash);
     }
 
@@ -86,8 +118,12 @@ contract GitHubOracle is IGitHubOracle, IPaymaster {
         uint256 prId,
         PRDetails calldata details
     ) public view {
-        bytes32 stateHash = keccak256(abi.encode(details));
-        require(prStates[repository][prId] == stateHash, "State hash differs");
+        // Compare hashes which are in the 24 bytes, ignoring the timestamp part.
+        bytes24 stateHash = bytes24(keccak256(abi.encode(details)));
+        bytes24 existingHash = bytes24(
+            prStates[keccak256(abi.encodePacked(repository, prId))]
+        );
+        require(existingHash == stateHash, "State hash differs");
     }
 
     // Paymaster will pay for any method call into this contract, assuming that
