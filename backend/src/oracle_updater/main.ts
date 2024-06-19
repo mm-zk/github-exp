@@ -14,7 +14,7 @@ const account = getAccount(process.env.WALLET_PRIVATE_KEY as Hex);
 const publicClient = getPublicClient();
 const walletClient = getWalletClient(account);
 
-const usePaymaster = true;
+const usePaymaster = false;
 
 
 function fetchAndUpdate(owner: string, repo: string, prId: number) {
