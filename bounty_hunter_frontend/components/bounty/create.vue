@@ -99,6 +99,7 @@ const onCreate = async () => {
   // not sure how to get address from github username
   const address = "0xBC989fDe9e54cAd2aB4392Af6dF60f04873A033A";
   try {
+    // TODO: figure out what the hell I'm doing wrong here
     inProgress.value = true;
     const { request, result } = await prepareWriteContract({
       abi: BountyABI,

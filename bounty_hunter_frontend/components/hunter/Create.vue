@@ -5,7 +5,6 @@
         v-model="username"
         type="text"
         placeholder="itsacoyote"
-        :value="preselectedUser"
         autofocus
       />
     </UFormGroup>
@@ -39,6 +38,7 @@ const username = defineModel("username");
 const address = defineModel("address");
 const props = defineProps<{ preselectedUser: string }>();
 const inProgress = ref(false);
+username.value = props.preselectedUser;
 
 const addUser = async function () {
   try {
@@ -51,6 +51,7 @@ const addUser = async function () {
     });
     const { hash } = await writeContract(request);
     emit("close");
+    username.value = "";
   } catch (e) {
     console.log(e);
   } finally {

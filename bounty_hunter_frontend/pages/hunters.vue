@@ -91,6 +91,7 @@
             @close="
               isInviteModalOpen = false;
               selectedUser = '';
+              searchHunter();
             "
             :preselectedUser="selectedUser"
           />
@@ -112,8 +113,6 @@ const isHunter = ref();
 const selectedUser = ref("");
 
 const searchHunter = async () => {
-  console.log("searching for hunter", searchHunterInput.value);
-
   const data = await readContract({
     address: Contracts.DevNFT,
     abi: DevNFTABI,
