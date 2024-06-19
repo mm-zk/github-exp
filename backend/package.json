@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "scripts": {
     "start": "ts-node src/main.ts",
-    "update_whitelist": "ts-node src/tools/update_whitelist.ts"
+    "update_whitelist": "ts-node src/tools/update_whitelist.ts",
+    "update_oracle": "ts-node src/oracle_updater/main.ts"
   },
   "dependencies": {
     "@octokit/rest": "^20.1.1",
