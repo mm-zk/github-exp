@@ -22,20 +22,27 @@
             color="primary"
             square
             :to="row.html_url"
+            external
             target="_blank"
             variant="ghost"
           />
-          <!-- <UIcon name="fluent:window-new-20-regular" dynamic /> -->
         </template>
         <template #bounties-data="{ row }">
-          <UBadge
-            color="gray"
-            variant="solid"
-            @click="openBountyModal(row)"
-            class="cursor-pointer"
-          >
+          <UBadge color="gray" variant="solid" class="cursor-pointer">
             5<UIcon name="octicon:project-roadmap-16" dynamic class="ml-2" />
           </UBadge>
+        </template>
+        <template #actions-data="{ row }">
+          <UButton
+            icon="i-heroicons-plus-solid"
+            class="cursor-pointer"
+            size="2xs"
+            color="emerald"
+            variant="outline"
+            :ui="{ rounded: 'rounded-full' }"
+            square
+            @click="openBountyModal(row)"
+          />
         </template>
       </UTable>
     </UDashboardPanel>
@@ -45,13 +52,19 @@
 
 <script setup lang="ts">
 import axios from "axios";
+import { readContracts } from "@wagmi/core";
 import type { GitHub } from "~/types/github";
+import { BountyABI } from "~/abi/bounty.abi";
+import { Contracts } from "~/abi/contracts";
+
+const { account } = storeToRefs(useWagmi());
 
 const repo = import.meta.env.VITE_API_TARGET_REPO;
 
 const columns = [
   { key: "pr", label: "Pull Requests" },
   { label: "Bounties", key: "bounties" },
+  { key: "actions" },
 ];
 
 const bountyModal = ref(false);

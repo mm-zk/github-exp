@@ -65,7 +65,7 @@ The next step would be to fetch the bounties from the contracts, and then do thi
 
 
 
-## Instalation
+## Installation
 
 * Start era-test-node 
 * in contracts - `npm run deploy` - will deploy the contracts, and put their addresses into ./.generated.env
