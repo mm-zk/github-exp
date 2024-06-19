@@ -3,7 +3,9 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "target": "ES2015",
+    "module": "commonjs"
   },
   "include": [
     "src/**/*.ts",
