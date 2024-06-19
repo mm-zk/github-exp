@@ -1,10 +1,10 @@
-import { type Hex, createPublicClient, createWalletClient, http, Account } from "viem";
+import { type Hex, createPublicClient, createWalletClient, http, Account, PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-
+import { eip712WalletActions } from 'viem/zksync'
 import { defaultChain } from "./chains";
 
 export const getPublicClient = (chain = defaultChain) => {
-  return createPublicClient({ 
+  return createPublicClient({
     chain,
     transport: http()
   });
@@ -17,5 +17,5 @@ export const getWalletClient = (account: Account, chain = defaultChain) => {
     account,
     chain,
     transport: http()
-  });
+  }).extend(eip712WalletActions());
 }

@@ -1,8 +1,8 @@
-import { type Hex, parseAbi, WalletClient, PublicClient, keccak256, toHex, bytesToBigInt, getContract, TransactionReceipt } from "viem";
-import { getAccount, getPublicClient, getWalletClient } from "../utils/client";
+import { type Hex, WalletClient, keccak256, toHex, getContract, TransactionReceipt } from "viem";
 import * as dotenv from 'dotenv';
 import { PRStatus } from "./utils";
 import { oracleAbi } from "./oracleabi";
+import { getGeneralPaymasterInput } from "viem/zksync";
 const axios = require('axios');
 
 dotenv.config();
@@ -31,7 +31,7 @@ function githubLoginToU128(githubLogin: string): bigint {
 
 }
 
-export async function updateOracle(walletClient: WalletClient, publicClient: PublicClient, owner: string, repo: string, prNumber: number, prStatus: PRStatus): Promise<TransactionReceipt> {
+export async function updateOracle(walletClient: WalletClient, publicClient: any, owner: string, repo: string, prNumber: number, prStatus: PRStatus, usePaymaster: boolean): Promise<TransactionReceipt> {
     const repository = `${owner}/${repo}`;
 
     const approvers: ReviewTimeEntry[] = [...prStatus.reviewStatus.entries()].sort((a, b) => a[0].localeCompare(b[0])).filter(x => x[1].approved).map(x => {
@@ -49,15 +49,21 @@ export async function updateOracle(walletClient: WalletClient, publicClient: Pub
         approvals: approvers
     };
 
-    const transactionHash = await walletClient.writeContract({
+    const contract = getContract({
         address: GITHUB_ORACLE.address,
         abi: oracleAbi,
-        functionName: "updatePRState",
-        account: walletClient.account!,
-        chain: walletClient.chain!,
-        args: [
-            repository, BigInt(prNumber), BigInt(new Date().getTime()), prABI
-        ],
+        client: {
+            public: publicClient, wallet: walletClient
+        }
+    });
+
+    const transactionHash = await contract.write.updatePRState([
+        repository, BigInt(prNumber), BigInt(new Date().getTime()), prABI
+    ], {
+        chain: walletClient.chain!, account: walletClient.account!,
+        paymaster: usePaymaster ? GITHUB_ORACLE.address : null,
+        paymasterInput: usePaymaster ? getGeneralPaymasterInput({ innerInput: '0x' }) : null
+
     });
 
     const receipt = await publicClient.waitForTransactionReceipt({ hash: transactionHash });

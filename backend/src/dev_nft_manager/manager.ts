@@ -1,5 +1,5 @@
 import { type Hex, parseAbi, WalletClient, PublicClient } from "viem";
-import { getAccount, getPublicClient, getWalletClient } from "../utils/client";
+
 import * as dotenv from 'dotenv';
 const axios = require('axios');
 
@@ -93,7 +93,7 @@ function extractMintAddresses(comments: GithubComment[]) {
 let allAddresses = new Map();
 
 
-export async function mintNFTFromComments(walletClient: WalletClient, publicClient: PublicClient) {
+export async function mintNFTFromComments(walletClient: WalletClient, publicClient: any) {
     const owner = 'mm-zk';  // Replace with the GitHub repository owner's username
     const repo = 'advanced_docs';  // Replace with the repository name
     const issueNumber = 1;  // Replace with the issue number

@@ -4,7 +4,7 @@ import { config } from 'dotenv';
 import { fetchPRStatus } from "./utils";
 import { getAccount, getPublicClient, getWalletClient } from "../utils/client";
 import { updateOracle } from "./updaters";
-import { Hex } from "viem";
+import { Hex, PublicClient } from "viem";
 
 
 config();
@@ -14,12 +14,13 @@ const account = getAccount(process.env.WALLET_PRIVATE_KEY as Hex);
 const publicClient = getPublicClient();
 const walletClient = getWalletClient(account);
 
+const usePaymaster = true;
 
 
 function fetchAndUpdate(owner: string, repo: string, prId: number) {
     fetchPRStatus(octokit, owner, repo, prId).then(prStatus => {
         console.log(prStatus);
-        updateOracle(walletClient, publicClient, owner, repo, prId, prStatus).then(
+        updateOracle(walletClient, publicClient, owner, repo, prId, prStatus, usePaymaster).then(
             receipt => {
                 console.log("Finished");
                 console.log(receipt);
