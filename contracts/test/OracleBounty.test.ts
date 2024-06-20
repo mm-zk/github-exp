@@ -2,14 +2,17 @@ import { expect } from 'chai';
 import { Contract, Wallet, utils } from "zksync-ethers";
 import { getWallet, deployContract, LOCAL_RICH_WALLETS, getProvider } from '../deploy/utils';
 import { ethers } from "ethers";
+import deploy from '../deploy/deploy';
 
 describe("ReviewToken", function () {
     let oracleContract: Contract;
     let bountyContract: Contract;
     let tokenContract: Contract;
+    let nftContract: Contract;
     let ownerWallet: Wallet;
     let userWallet: Wallet;
     let reviewerWallet: Wallet;
+
 
     before(async function () {
         ownerWallet = getWallet(LOCAL_RICH_WALLETS[0].privateKey);
@@ -20,22 +23,27 @@ describe("ReviewToken", function () {
         oracleContract = await deployContract("GitHubOracle", [], { wallet: ownerWallet, silent: true });
         bountyContract = await deployContract("CodeReviewBounties", [], { wallet: ownerWallet, silent: true });
         tokenContract = await deployContract("ReviewToken", [], { wallet: ownerWallet, silent: true });
+        nftContract = await deployContract("ZKsyncDevNFT", [], { wallet: ownerWallet, silent: true });
 
         await bountyContract.setGitHubOracleAddress(await oracleContract.getAddress()).then(tx => tx.wait());
+        await bountyContract.setDevNFT(await nftContract.getAddress()).then(tx => tx.wait());
+
+        // Mint the nft for the reviewer.
+        await nftContract.mint(reviewerWallet.address, "reviewer").then(tx => tx.wait());
 
         const tx = await tokenContract.transfer(userWallet.address, 100);
         await tx.wait();
 
     });
 
-    xit("Bounty and claim", async function () {
+    it("Bounty and claim", async function () {
         const userBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, userWallet);
         const reviewerBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, reviewerWallet);
         const userTokenContract = new Contract(await tokenContract.getAddress(), tokenContract.interface, userWallet);
         await userTokenContract.approve(await bountyContract.getAddress(), 10).then(tx => tx.wait());
         // Create a bounty.
         await userBountyContract.addBounty(
-            "repo1", 1, reviewerWallet.address, 10, tokenContract
+            "repo1", 1, "reviewer", 10, tokenContract
         ).then(tx => tx.wait());
 
         expect(await tokenContract.balanceOf(userWallet.address)).to.be.equal(90);
@@ -84,7 +92,7 @@ describe("ReviewToken", function () {
         ).then(tx => tx.wait())).to.be.revertedWith("Bounty already claimed");
     });
 
-    xit("With Oracle paymaster", async function () {
+    it("With Oracle paymaster", async function () {
         // Oracle update has no tokens, it will try to use the Oracle's paymaster to cover the costs.
         const oracleUpdater = getWallet(Wallet.createRandom().privateKey);
 
@@ -102,7 +110,7 @@ describe("ReviewToken", function () {
         await userTokenContract.approve(await bountyContract.getAddress(), 8).then(tx => tx.wait());
         // Create a bounty.
         await userBountyContract.addBounty(
-            "repo1", 3, reviewerWallet.address, 8, tokenContract
+            "repo1", 3, "reviewer", 8, tokenContract
         ).then(tx => tx.wait());
 
 
@@ -160,7 +168,7 @@ describe("ReviewToken", function () {
     });
 
 
-    xit("Test Paymaster Oracle", async function () {
+    it("Test Paymaster Oracle", async function () {
         await ownerWallet.transfer({ to: await oracleContract.getAddress(), amount: ethers.parseEther("1") }).then(tx => tx.wait());
 
         const oracleUpdater = getWallet(Wallet.createRandom().privateKey);
@@ -223,27 +231,27 @@ describe("ReviewToken", function () {
         await userTokenContract.approve(await bountyContract.getAddress(), 15).then(tx => tx.wait());
         // Create a bounty.
         await userBountyContract.addBounty(
-            "repo5", 1, reviewerWallet.address, 1, tokenContract
+            "repo5", 1, "reviewer", 1, tokenContract
         ).then(tx => tx.wait());
         expect(await userBountyContract.getBountiesCount("repo5", 1)).to.be.equal(1);
 
 
 
         await userBountyContract.addBounty(
-            "repo5", 2, reviewerWallet.address, 2, tokenContract
+            "repo5", 2, "reviewer", 2, tokenContract
         ).then(tx => tx.wait());
 
         await userBountyContract.addBounty(
-            "repo5", 1, reviewerWallet.address, 3, tokenContract
+            "repo5", 1, "reviewer", 3, tokenContract
         ).then(tx => tx.wait());
 
 
         await userBountyContract.addBounty(
-            "repo6", 2, reviewerWallet.address, 4, tokenContract
+            "repo6", 2, "reviewer", 4, tokenContract
         ).then(tx => tx.wait());
 
         await userBountyContract.addBounty(
-            "repo5", 1, reviewerWallet.address, 5, tokenContract
+            "repo5", 1, "reviewer", 5, tokenContract
         ).then(tx => tx.wait());
 
 

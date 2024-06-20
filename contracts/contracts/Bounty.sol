@@ -16,11 +16,18 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
+interface ZKsyncDEVNFT {
+    function ownerOf(uint256 tokenId) external view returns (address);
+    function githubToToken(
+        string calldata githubUsername
+    ) external pure returns (uint256);
+}
+
 contract CodeReviewBounties {
     struct Bounty {
         string repositoryName;
         uint pullRequestId;
-        address payable receiver;
+        uint256 receiverNFTTokenId;
         uint amount;
         address erc20Token;
         bool claimed;
@@ -34,6 +41,8 @@ contract CodeReviewBounties {
     mapping(uint256 => uint64) public latestBounty;
 
     IGitHubOracle public gitHubOracle;
+    ZKsyncDEVNFT public devNFT;
+
     address public owner;
 
     constructor() {
@@ -50,12 +59,17 @@ contract CodeReviewBounties {
         gitHubOracle = IGitHubOracle(oracleAddress);
     }
 
+    // Set the address of the NFT.
+    function setDevNFT(address devNFTAddress) public onlyOwner {
+        devNFT = ZKsyncDEVNFT(devNFTAddress);
+    }
+
     // Event to emit when a new bounty is added.
     event BountyAdded(
         uint bountyId,
         string repositoryName,
         uint pullRequestId,
-        address indexed receiver,
+        string receiverGithubUsername,
         uint amount,
         address erc20Token
     );
@@ -65,9 +79,9 @@ contract CodeReviewBounties {
 
     // Add a new bounty
     function addBounty(
-        string memory repositoryName,
+        string calldata repositoryName,
         uint pullRequestId,
-        address payable receiver,
+        string calldata receiverGithubUsername,
         uint amount,
         address erc20Token
     ) public {
@@ -81,11 +95,15 @@ contract CodeReviewBounties {
         );
         uint64 previousBountyIndex = latestBounty[mapKey];
 
+        uint256 receiverNFTTokenId = devNFT.githubToToken(
+            receiverGithubUsername
+        );
+
         bounties.push(
             Bounty({
                 repositoryName: repositoryName,
                 pullRequestId: pullRequestId,
-                receiver: receiver,
+                receiverNFTTokenId: receiverNFTTokenId,
                 amount: amount,
                 erc20Token: erc20Token,
                 claimed: false,
@@ -101,7 +119,7 @@ contract CodeReviewBounties {
             bountyId,
             repositoryName,
             pullRequestId,
-            receiver,
+            receiverGithubUsername,
             amount,
             erc20Token
         );
@@ -148,8 +166,10 @@ contract CodeReviewBounties {
     function claimBounty(uint bountyId, PRDetails calldata details) public {
         Bounty storage bounty = bounties[bountyId];
         require(!bounty.claimed, "Bounty already claimed");
+        address nftOwner = devNFT.ownerOf(bounty.receiverNFTTokenId);
+        require(uint160(nftOwner) != 0, "NFT not minted yet or burned");
         require(
-            msg.sender == bounty.receiver,
+            msg.sender == nftOwner,
             "Only the designated receiver can claim the bounty"
         );
 
@@ -163,7 +183,7 @@ contract CodeReviewBounties {
 
         bounty.claimed = true;
         require(
-            IERC20(bounty.erc20Token).transfer(bounty.receiver, bounty.amount),
+            IERC20(bounty.erc20Token).transfer(nftOwner, bounty.amount),
             "Transfer failed"
         );
         emit BountyClaimed(bountyId, msg.sender);

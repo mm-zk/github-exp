@@ -15,6 +15,8 @@ export default async function () {
   const bountyContract = await deployContract("CodeReviewBounties");
 
   await bountyContract.setGitHubOracleAddress(await oracleContract.getAddress()).then(tx => tx.wait());
+  await bountyContract.setDevNFT(await devNFT.getAddress()).then(tx => tx.wait());
+
 
   const content = [
     `REVIEW_TOKEN_ADDRESS=${await reviewToken.getAddress()}`,
