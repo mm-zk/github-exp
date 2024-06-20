@@ -24,9 +24,15 @@ contract CodeReviewBounties {
         uint amount;
         address erc20Token;
         bool claimed;
+        // index to the previous bounty for the same repo & pull id.
+        // if 0 - then this is the first bounty of its type.
+        // to access prevoius bounty: bounties[previousBountyIndex - 1]
+        uint64 previousBountyIndex;
     }
 
     Bounty[] public bounties;
+    mapping(uint256 => uint64) public latestBounty;
+
     IGitHubOracle public gitHubOracle;
     address public owner;
 
@@ -70,6 +76,11 @@ contract CodeReviewBounties {
             "Transfer failed"
         );
 
+        uint256 mapKey = uint256(
+            keccak256(abi.encode(repositoryName, pullRequestId))
+        );
+        uint64 previousBountyIndex = latestBounty[mapKey];
+
         bounties.push(
             Bounty({
                 repositoryName: repositoryName,
@@ -77,11 +88,15 @@ contract CodeReviewBounties {
                 receiver: receiver,
                 amount: amount,
                 erc20Token: erc20Token,
-                claimed: false
+                claimed: false,
+                previousBountyIndex: previousBountyIndex
             })
         );
 
         uint bountyId = bounties.length - 1;
+        // Update the map.
+        latestBounty[mapKey] = uint64(bountyId + 1);
+
         emit BountyAdded(
             bountyId,
             repositoryName,
@@ -90,6 +105,43 @@ contract CodeReviewBounties {
             amount,
             erc20Token
         );
+    }
+
+    // Returns number of bounties for a given repo/pull request.
+    function getBountiesCount(
+        string calldata repositoryName,
+        uint pullRequestId
+    ) public view returns (uint64 result) {
+        result = 0;
+        uint256 mapKey = uint256(
+            keccak256(abi.encode(repositoryName, pullRequestId))
+        );
+        uint64 previousBountyIndex = latestBounty[mapKey];
+        while (previousBountyIndex != 0) {
+            result += 1;
+            previousBountyIndex = bounties[previousBountyIndex - 1]
+                .previousBountyIndex;
+        }
+    }
+
+    // Gets up to 'maxResults' bounties for a given repo / pull request.
+    function getBounties(
+        string calldata repositoryName,
+        uint pullRequestId,
+        uint maxResults
+    ) public view returns (Bounty[] memory result) {
+        result = new Bounty[](maxResults);
+        uint index = 0;
+        uint256 mapKey = uint256(
+            keccak256(abi.encode(repositoryName, pullRequestId))
+        );
+        uint64 previousBountyIndex = latestBounty[mapKey];
+        while (previousBountyIndex != 0 && index < maxResults) {
+            result[index] = bounties[previousBountyIndex - 1];
+            index += 1;
+            previousBountyIndex = bounties[previousBountyIndex - 1]
+                .previousBountyIndex;
+        }
     }
 
     // Claim a bounty

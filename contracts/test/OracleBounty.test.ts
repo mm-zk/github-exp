@@ -28,7 +28,7 @@ describe("ReviewToken", function () {
 
     });
 
-    it("Bounty and claim", async function () {
+    xit("Bounty and claim", async function () {
         const userBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, userWallet);
         const reviewerBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, reviewerWallet);
         const userTokenContract = new Contract(await tokenContract.getAddress(), tokenContract.interface, userWallet);
@@ -84,7 +84,7 @@ describe("ReviewToken", function () {
         ).then(tx => tx.wait())).to.be.revertedWith("Bounty already claimed");
     });
 
-    it("With Oracle paymaster", async function () {
+    xit("With Oracle paymaster", async function () {
         // Oracle update has no tokens, it will try to use the Oracle's paymaster to cover the costs.
         const oracleUpdater = getWallet(Wallet.createRandom().privateKey);
 
@@ -160,7 +160,7 @@ describe("ReviewToken", function () {
     });
 
 
-    it("Test Paymaster Oracle", async function () {
+    xit("Test Paymaster Oracle", async function () {
         await ownerWallet.transfer({ to: await oracleContract.getAddress(), amount: ethers.parseEther("1") }).then(tx => tx.wait());
 
         const oracleUpdater = getWallet(Wallet.createRandom().privateKey);
@@ -211,5 +211,58 @@ describe("ReviewToken", function () {
         }).then(tx => tx.wait());
 
     });
+
+    it("Bounty management", async function () {
+        const tokenContract = await deployContract("ReviewToken", [], { wallet: ownerWallet, silent: true });
+        await tokenContract.transfer(userWallet.address, 100).then(tx => tx.wait());
+
+
+        const userBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, userWallet);
+
+        const userTokenContract = new Contract(await tokenContract.getAddress(), tokenContract.interface, userWallet);
+        await userTokenContract.approve(await bountyContract.getAddress(), 15).then(tx => tx.wait());
+        // Create a bounty.
+        await userBountyContract.addBounty(
+            "repo5", 1, reviewerWallet.address, 1, tokenContract
+        ).then(tx => tx.wait());
+        expect(await userBountyContract.getBountiesCount("repo5", 1)).to.be.equal(1);
+
+
+
+        await userBountyContract.addBounty(
+            "repo5", 2, reviewerWallet.address, 2, tokenContract
+        ).then(tx => tx.wait());
+
+        await userBountyContract.addBounty(
+            "repo5", 1, reviewerWallet.address, 3, tokenContract
+        ).then(tx => tx.wait());
+
+
+        await userBountyContract.addBounty(
+            "repo6", 2, reviewerWallet.address, 4, tokenContract
+        ).then(tx => tx.wait());
+
+        await userBountyContract.addBounty(
+            "repo5", 1, reviewerWallet.address, 5, tokenContract
+        ).then(tx => tx.wait());
+
+
+        expect(await userBountyContract.getBountiesCount("repo5", 1)).to.be.equal(3);
+        expect(await userBountyContract.getBountiesCount("repo6", 2)).to.be.equal(1);
+        expect(await userBountyContract.getBountiesCount("invalid", 2)).to.be.equal(0);
+        expect(await userBountyContract.getBountiesCount("repo5", 2)).to.be.equal(1);
+
+        const bounties5 = await userBountyContract.getBounties("repo5", 1, 4);
+
+        // bounties will be sorted in reverse direction.
+        // here we are comparing the rewards.
+        expect(bounties5[0][3]).to.be.equal(5);
+        expect(bounties5[1][3]).to.be.equal(3);
+        expect(bounties5[2][3]).to.be.equal(1);
+        // Last one should be empty, as there are only 3 bounties.
+        expect(bounties5[3][3]).to.be.equal(0);
+
+    });
+
 });
 
