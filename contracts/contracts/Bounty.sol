@@ -23,14 +23,106 @@ interface ZKsyncDEVNFT {
     ) external pure returns (uint256);
 }
 
+enum ReceiverInvolvement {
+    Any,
+    Author,
+    Reviewer
+}
+
+struct BountyConditions {
+    // If bounty conditions are not met by this time, bounty can be reverted.
+    uint256 abortTimestamp;
+    // Conditions for the receiver.
+    ReceiverInvolvement receiverInvolvement;
+    // Reward degradation (only if receiver is Author or Reviewer).
+    // Reward is computed as:
+    //     time_taken_by_receiver - degradationStartSeconds
+
+    // If receiver takes less that this many seconds, they will get 100%.
+    uint64 degradationStartSeconds;
+    // If they take more than this many seconds they will take 0 reward.
+    uint64 degradationEndSeconds;
+}
+
+function validateConditions(BountyConditions calldata conditions) pure {
+    require(
+        conditions.degradationStartSeconds <= conditions.degradationEndSeconds,
+        "wrong degratation boundaries"
+    );
+}
+
+function computeRewardPercent(
+    uint64 duration,
+    uint64 start,
+    uint64 end
+) pure returns (uint64 percent) {
+    if (duration <= start) {
+        // max.
+        return 100;
+    }
+
+    if (duration > end) {
+        return 0;
+    }
+
+    uint128 x = uint128(duration - start) * 100;
+    uint128 y = end - start;
+    require(y > 0, "empty duration");
+
+    return uint64(x / y);
+}
+
+function computeRewardPercentForBounty(
+    BountyConditions storage conditions,
+    PRDetails calldata details,
+    uint256 reviewerTokenId
+) view returns (uint64 percent) {
+    // TOOD: verify the cast.
+    uint128 reviewer = uint128(reviewerTokenId);
+
+    if (conditions.receiverInvolvement == ReceiverInvolvement.Any) {
+        // MAX.
+        return 100;
+    }
+    if (conditions.receiverInvolvement == ReceiverInvolvement.Author) {
+        uint64 maxAuthorDuration = 0;
+        for (uint i = 0; i < details.approvals.length; i++) {
+            if (details.approvals[i].authorDuration > maxAuthorDuration) {
+                maxAuthorDuration = details.approvals[i].authorDuration;
+            }
+        }
+        return
+            computeRewardPercent(
+                maxAuthorDuration,
+                conditions.degradationStartSeconds,
+                conditions.degradationEndSeconds
+            );
+    }
+    // This condition means that the receiver was supposed to be a reviewer.
+    for (uint i = 0; i < details.approvals.length; i++) {
+        if (details.approvals[i].reviewer == reviewer) {
+            return
+                computeRewardPercent(
+                    details.approvals[i].reviewerDuration,
+                    conditions.degradationStartSeconds,
+                    conditions.degradationEndSeconds
+                );
+        }
+    }
+    // But in this case, they didn't actually approve the PR - so no reward.
+    return 0;
+}
+
 contract CodeReviewBounties {
     struct Bounty {
+        address sender;
         string repositoryName;
         uint pullRequestId;
         uint256 receiverNFTTokenId;
         uint amount;
         address erc20Token;
         bool claimed;
+        BountyConditions conditions;
         // index to the previous bounty for the same repo & pull id.
         // if 0 - then this is the first bounty of its type.
         // to access prevoius bounty: bounties[previousBountyIndex - 1]
@@ -76,6 +168,7 @@ contract CodeReviewBounties {
 
     // Event to emit when a bounty is claimed.
     event BountyClaimed(uint bountyId, address indexed claimant);
+    event BountyAborted(uint bountyId, address indexed claimant);
 
     // Add a new bounty
     function addBounty(
@@ -83,7 +176,8 @@ contract CodeReviewBounties {
         uint pullRequestId,
         string calldata receiverGithubUsername,
         uint amount,
-        address erc20Token
+        address erc20Token,
+        BountyConditions calldata conditions
     ) public {
         require(
             IERC20(erc20Token).transferFrom(msg.sender, address(this), amount),
@@ -101,12 +195,14 @@ contract CodeReviewBounties {
 
         bounties.push(
             Bounty({
+                sender: msg.sender,
                 repositoryName: repositoryName,
                 pullRequestId: pullRequestId,
                 receiverNFTTokenId: receiverNFTTokenId,
                 amount: amount,
                 erc20Token: erc20Token,
                 claimed: false,
+                conditions: conditions,
                 previousBountyIndex: previousBountyIndex
             })
         );
@@ -182,10 +278,43 @@ contract CodeReviewBounties {
         require(details.isMergedToMain, "PR is not merged yet");
 
         bounty.claimed = true;
+
+        uint64 percent = computeRewardPercentForBounty(
+            bounty.conditions,
+            details,
+            bounty.receiverNFTTokenId
+        );
+        require(percent <= 100, "Percent incorrect");
+
+        uint256 toTransfer = (bounty.amount * 100) / percent;
+        require(toTransfer <= bounty.amount, "Invalid mul");
+        uint256 toReturn = bounty.amount - toTransfer;
+
         require(
-            IERC20(bounty.erc20Token).transfer(nftOwner, bounty.amount),
+            IERC20(bounty.erc20Token).transfer(nftOwner, toTransfer),
             "Transfer failed"
         );
+        if (toReturn > 0) {
+            require(
+                IERC20(bounty.erc20Token).transfer(bounty.sender, toReturn),
+                "Transfer failed"
+            );
+        }
         emit BountyClaimed(bountyId, msg.sender);
+    }
+
+    function abortBounty(uint bountyId) public {
+        Bounty storage bounty = bounties[bountyId];
+        require(!bounty.claimed, "Bounty already claimed");
+        require(
+            bounty.conditions.abortTimestamp > block.timestamp,
+            "Bounty not ready for abort yet"
+        );
+        bounty.claimed = true;
+        require(
+            IERC20(bounty.erc20Token).transfer(bounty.sender, bounty.amount),
+            "Transfer failed"
+        );
+        emit BountyAborted(bountyId, msg.sender);
     }
 }

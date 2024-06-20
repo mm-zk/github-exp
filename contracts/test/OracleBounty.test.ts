@@ -42,8 +42,14 @@ describe("ReviewToken", function () {
         const userTokenContract = new Contract(await tokenContract.getAddress(), tokenContract.interface, userWallet);
         await userTokenContract.approve(await bountyContract.getAddress(), 10).then(tx => tx.wait());
         // Create a bounty.
+        let conditions = {
+            abortTimestamp: 0,
+            receiverInvolvement: 0,
+            degradationStartSeconds: 0,
+            degradationEndSeconds: 0,
+        }
         await userBountyContract.addBounty(
-            "repo1", 1, "reviewer", 10, tokenContract
+            "repo1", 1, "reviewer", 10, tokenContract, conditions
         ).then(tx => tx.wait());
 
         expect(await tokenContract.balanceOf(userWallet.address)).to.be.equal(90);
@@ -109,8 +115,14 @@ describe("ReviewToken", function () {
 
         await userTokenContract.approve(await bountyContract.getAddress(), 8).then(tx => tx.wait());
         // Create a bounty.
+        let conditions = {
+            abortTimestamp: 0,
+            receiverInvolvement: 0,
+            degradationStartSeconds: 0,
+            degradationEndSeconds: 0,
+        }
         await userBountyContract.addBounty(
-            "repo1", 3, "reviewer", 8, tokenContract
+            "repo1", 3, "reviewer", 8, tokenContract, conditions
         ).then(tx => tx.wait());
 
 
@@ -221,6 +233,12 @@ describe("ReviewToken", function () {
     });
 
     it("Bounty management", async function () {
+        let conditions = {
+            abortTimestamp: 0,
+            receiverInvolvement: 0,
+            degradationStartSeconds: 0,
+            degradationEndSeconds: 0,
+        }
         const tokenContract = await deployContract("ReviewToken", [], { wallet: ownerWallet, silent: true });
         await tokenContract.transfer(userWallet.address, 100).then(tx => tx.wait());
 
@@ -231,27 +249,27 @@ describe("ReviewToken", function () {
         await userTokenContract.approve(await bountyContract.getAddress(), 15).then(tx => tx.wait());
         // Create a bounty.
         await userBountyContract.addBounty(
-            "repo5", 1, "reviewer", 1, tokenContract
+            "repo5", 1, "reviewer", 1, tokenContract, conditions
         ).then(tx => tx.wait());
         expect(await userBountyContract.getBountiesCount("repo5", 1)).to.be.equal(1);
 
 
 
         await userBountyContract.addBounty(
-            "repo5", 2, "reviewer", 2, tokenContract
+            "repo5", 2, "reviewer", 2, tokenContract, conditions
         ).then(tx => tx.wait());
 
         await userBountyContract.addBounty(
-            "repo5", 1, "reviewer", 3, tokenContract
+            "repo5", 1, "reviewer", 3, tokenContract, conditions
         ).then(tx => tx.wait());
 
 
         await userBountyContract.addBounty(
-            "repo6", 2, "reviewer", 4, tokenContract
+            "repo6", 2, "reviewer", 4, tokenContract, conditions
         ).then(tx => tx.wait());
 
         await userBountyContract.addBounty(
-            "repo5", 1, "reviewer", 5, tokenContract
+            "repo5", 1, "reviewer", 5, tokenContract, conditions
         ).then(tx => tx.wait());
 
 
@@ -262,13 +280,15 @@ describe("ReviewToken", function () {
 
         const bounties5 = await userBountyContract.getBounties("repo5", 1, 4);
 
+        console.log(bounties5);
+
         // bounties will be sorted in reverse direction.
         // here we are comparing the rewards.
-        expect(bounties5[0][3]).to.be.equal(5);
-        expect(bounties5[1][3]).to.be.equal(3);
-        expect(bounties5[2][3]).to.be.equal(1);
+        expect(bounties5[0][4]).to.be.equal(5);
+        expect(bounties5[1][4]).to.be.equal(3);
+        expect(bounties5[2][4]).to.be.equal(1);
         // Last one should be empty, as there are only 3 bounties.
-        expect(bounties5[3][3]).to.be.equal(0);
+        expect(bounties5[3][4]).to.be.equal(0);
 
     });
 
