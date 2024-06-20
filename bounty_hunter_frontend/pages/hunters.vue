@@ -39,7 +39,6 @@
               </div>
             </template>
 
-            <!-- ~/components/settings/MembersList.vue -->
             <div v-if="userData" class="m-4">
               <UCard>
                 <div
@@ -61,9 +60,8 @@
                     <div v-if="isHunter">{{ userBalance }} RVW</div>
                   </div>
                   <div class="flex items-center gap-3">
-                    <UButton color="primary">
+                    <UButton color="primary" v-if="isHunter && userAddress">
                       <UIcon
-                        v-if="isHunter && userAddress"
                         class="w-6 h-6"
                         name="ph:coin-vertical"
                         dynamic
@@ -112,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { prepareWriteContract, readContract, writeContract } from "@wagmi/core";
+import { prepareWriteContract, writeContract, getContract } from "@wagmi/core";
 import { Contracts } from "~/abi/contracts";
 import { DevNFTABI } from "~/abi/devNft.abi";
 import { ReviewTokenABI } from "~/abi/reviewToken.abi";
@@ -126,35 +124,31 @@ const selectedUser = ref("");
 const userAddress = ref("");
 const userBalance = ref("");
 
+const devNFTContract = getContract({
+  address: Contracts.DevNFT,
+  abi: DevNFTABI,
+});
+
+const reviewTokenContract = getContract({
+  address: Contracts.ReviewToken,
+  abi: ReviewTokenABI,
+});
+
 const searchHunter = async () => {
-  const data = await readContract({
-    address: Contracts.DevNFT,
-    abi: DevNFTABI,
-    functionName: "exists",
-    args: [searchHunterInput.value.toLowerCase()],
-  });
+  const data = await devNFTContract.read.exists([
+    searchHunterInput.value.toLowerCase(),
+  ]);
 
   if (data) {
-    const userToken = await readContract({
-      address: Contracts.DevNFT,
-      abi: DevNFTABI,
-      functionName: "githubToToken",
-      args: [searchHunterInput.value.toLowerCase()],
-    });
+    const userToken = await devNFTContract.read.githubToToken([
+      searchHunterInput.value.toLowerCase(),
+    ]);
 
-    userAddress.value = await readContract({
-      address: Contracts.DevNFT,
-      abi: DevNFTABI,
-      functionName: "ownerOf",
-      args: [userToken],
-    });
+    userAddress.value = await devNFTContract.read.ownerOf([userToken]);
 
-    userBalance.value = await readContract({
-      address: Contracts.ReviewToken,
-      abi: ReviewTokenABI,
-      functionName: "balanceOf",
-      args: [userAddress.value],
-    });
+    userBalance.value = await reviewTokenContract.read.balanceOf([
+      userAddress.value,
+    ]);
   }
 
   const url = `https://api.github.com/users/${searchHunterInput.value}`;
@@ -175,7 +169,6 @@ const giveCoin = async () => {
     functionName: "transfer",
     args: [userAddress.value, parseUnits("42", 0)],
   });
-
   await writeContract(request);
 };
 </script>

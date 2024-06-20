@@ -28,7 +28,11 @@
       </USelectMenu>
       <div class="mt-2">
         <strong>Amount</strong>
-        <UInput v-model="rewardAmount" placeholder="42" />
+        <UInput v-model="rewardAmount" placeholder="42">
+          <template #leading>
+            <UIcon name="ph:coin-vertical" dynamic />
+          </template>
+        </UInput>
       </div>
     </template>
     <template #footer>
@@ -49,7 +53,7 @@ import { BountyABI } from "~/abi/bounty.abi";
 import { Contracts } from "~/abi/contracts";
 import { DevNFTABI } from "~/abi/devNft.abi";
 import type { GitHub } from "~/types/github";
-import { parseUnits } from "viem";
+import { formatUnits, hashMessage } from "viem";
 
 const props = defineProps<{ pr: GitHub.PR | null }>();
 const open = defineModel("open");
@@ -88,29 +92,32 @@ watch(
 );
 
 const onCreate = async () => {
-  // faking address to test until I can get an address from GH username
-  const address = "0xBC989fDe9e54cAd2aB4392Af6dF60f04873A033A";
   const rewardTokenAddress = Contracts.ReviewToken;
   try {
-    // TODO: figure out what the hell I'm doing wrong here
     inProgress.value = true;
-    const { request, result } = await prepareWriteContract({
+    const { request } = await prepareWriteContract({
       abi: BountyABI,
       address: Contracts.Bounty,
       functionName: "addBounty",
       args: [
         repo,
-        props.pr?.number,
-        address,
-        parseUnits(rewardAmount.value, 0),
+        props.pr?.number.toString(),
+        selected.value.id.toLowerCase(),
+        rewardAmount.value.toString(),
         rewardTokenAddress,
+        {
+          abortTimestamp: 0,
+          receiverInvolvement: 0,
+          degradationStartSeconds: 0,
+          degradationEndSeconds: 0,
+        },
       ],
     });
-    const { hash } = await writeContract(request);
+    await writeContract(request);
 
     open.value = false;
   } catch (e) {
-    console.log(e);
+    console.log("ERROR", e);
   } finally {
     inProgress.value = false;
   }

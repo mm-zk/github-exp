@@ -13,7 +13,7 @@
         :rows="pullRequests || []"
       >
         <template #pr-data="{ row }">
-          <PrStatus :pr="row" />
+          <PRStatus :pr="row" />
           <strong>{{ row.number }}</strong>
           {{ row.title }}
           <UButton
@@ -28,9 +28,7 @@
           />
         </template>
         <template #bounties-data="{ row }">
-          <UBadge color="gray" variant="solid" class="cursor-pointer">
-            5<UIcon name="octicon:project-roadmap-16" dynamic class="ml-2" />
-          </UBadge>
+          <PRBountyCount :pr="row" />
         </template>
         <template #actions-data="{ row }">
           <UButton
