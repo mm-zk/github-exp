@@ -19,6 +19,10 @@ contract ReviewToken is ERC20Burnable {
         uint256 initialSupply = 1_000_000_000;
 
         // The initial supply is minted to the deployer's address
-        _mint(msg.sender, initialSupply);
+        _mint(msg.sender, initialSupply * 10 ** decimals());
+    }
+
+    function decimals() public view virtual override returns (uint8) {
+        return 0;
     }
 }
