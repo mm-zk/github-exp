@@ -58,8 +58,18 @@
                         {{ userData.name }}
                       </p>
                     </div>
+                    <div v-if="isHunter">{{ userBalance }} RVW</div>
                   </div>
                   <div class="flex items-center gap-3">
+                    <UButton color="primary">
+                      <UIcon
+                        v-if="isHunter && userAddress"
+                        class="w-6 h-6"
+                        name="ph:coin-vertical"
+                        dynamic
+                        @click="giveCoin"
+                      />
+                    </UButton>
                     <UIcon
                       v-if="isHunter"
                       class="w-12 h-12 text-primary-800"
@@ -102,23 +112,50 @@
 </template>
 
 <script setup lang="ts">
-import { readContract } from "@wagmi/core";
+import { prepareWriteContract, readContract, writeContract } from "@wagmi/core";
 import { Contracts } from "~/abi/contracts";
 import { DevNFTABI } from "~/abi/devNft.abi";
+import { ReviewTokenABI } from "~/abi/reviewToken.abi";
+import { parseUnits } from "viem";
 
 const searchHunterInput = ref("");
 const isInviteModalOpen = ref(false);
 const userData = ref();
 const isHunter = ref();
 const selectedUser = ref("");
+const userAddress = ref("");
+const userBalance = ref("");
 
 const searchHunter = async () => {
   const data = await readContract({
     address: Contracts.DevNFT,
     abi: DevNFTABI,
     functionName: "exists",
-    args: [searchHunterInput.value],
+    args: [searchHunterInput.value.toLowerCase()],
   });
+
+  if (data) {
+    const userToken = await readContract({
+      address: Contracts.DevNFT,
+      abi: DevNFTABI,
+      functionName: "githubToToken",
+      args: [searchHunterInput.value.toLowerCase()],
+    });
+
+    userAddress.value = await readContract({
+      address: Contracts.DevNFT,
+      abi: DevNFTABI,
+      functionName: "ownerOf",
+      args: [userToken],
+    });
+
+    userBalance.value = await readContract({
+      address: Contracts.ReviewToken,
+      abi: ReviewTokenABI,
+      functionName: "balanceOf",
+      args: [userAddress.value],
+    });
+  }
 
   const url = `https://api.github.com/users/${searchHunterInput.value}`;
   userData.value = await fetch(url)
@@ -128,5 +165,17 @@ const searchHunter = async () => {
     });
 
   isHunter.value = data;
+};
+
+const giveCoin = async () => {
+  // am I really transferring tokens from the review token contract?
+  const { request } = await prepareWriteContract({
+    abi: ReviewTokenABI,
+    address: Contracts.ReviewToken,
+    functionName: "transfer",
+    args: [userAddress.value, parseUnits("42", 0)],
+  });
+
+  await writeContract(request);
 };
 </script>

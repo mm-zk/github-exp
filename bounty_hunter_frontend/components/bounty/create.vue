@@ -27,16 +27,8 @@
         </template>
       </USelectMenu>
       <div class="mt-2">
-        <strong>Token (ERC20)</strong>
-        <UInput v-model="rewardToken" placeholder="Address">
-          <template #leading>
-            <UIcon name="ph:coin-vertical" dynamic />
-          </template>
-        </UInput>
-      </div>
-      <div class="mt-2">
         <strong>Amount</strong>
-        <UInput v-model="rewardAmount" placeholder=".0001" />
+        <UInput v-model="rewardAmount" placeholder="42" />
       </div>
     </template>
     <template #footer>
@@ -52,16 +44,17 @@
 </template>
 
 <script setup lang="ts">
-import { prepareWriteContract, writeContract } from "@wagmi/core";
+import { prepareWriteContract, writeContract, readContract } from "@wagmi/core";
 import { BountyABI } from "~/abi/bounty.abi";
 import { Contracts } from "~/abi/contracts";
+import { DevNFTABI } from "~/abi/devNft.abi";
 import type { GitHub } from "~/types/github";
+import { parseUnits } from "viem";
 
 const props = defineProps<{ pr: GitHub.PR | null }>();
 const open = defineModel("open");
 
 const rewardAmount = ref("");
-const rewardToken = ref("");
 const repo = import.meta.env.VITE_API_TARGET_REPO;
 
 const reviewers = computed(() => {
@@ -95,9 +88,9 @@ watch(
 );
 
 const onCreate = async () => {
-  // temporary address to setup with
-  // not sure how to get address from github username
+  // faking address to test until I can get an address from GH username
   const address = "0xBC989fDe9e54cAd2aB4392Af6dF60f04873A033A";
+  const rewardTokenAddress = Contracts.ReviewToken;
   try {
     // TODO: figure out what the hell I'm doing wrong here
     inProgress.value = true;
@@ -109,8 +102,8 @@ const onCreate = async () => {
         repo,
         props.pr?.number,
         address,
-        BigInt(rewardAmount.value),
-        rewardToken.value,
+        parseUnits(rewardAmount.value, 0),
+        rewardTokenAddress,
       ],
     });
     const { hash } = await writeContract(request);

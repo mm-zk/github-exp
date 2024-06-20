@@ -47,7 +47,10 @@ const addUser = async function () {
       abi: DevNFTABI,
       address: Contracts.DevNFT,
       functionName: "mint",
-      args: [address.value as `0x${string}`, username.value as string],
+      args: [
+        address.value as `0x${string}`,
+        username.value.toLowerCase() as string,
+      ],
     });
     const { hash } = await writeContract(request);
     emit("close");
