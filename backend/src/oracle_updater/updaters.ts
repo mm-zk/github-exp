@@ -1,4 +1,4 @@
-import { type Hex, WalletClient, keccak256, toHex, getContract, TransactionReceipt } from "viem";
+import { type Hex, WalletClient, keccak256, toHex, getContract, TransactionReceipt, encodeAbiParameters } from "viem";
 import * as dotenv from 'dotenv';
 import { PRStatus } from "./utils";
 import { oracleAbi } from "./oracleabi";
@@ -26,9 +26,10 @@ interface PRDetails {
     approvals: ReviewTimeEntry[],
 }
 
-function githubLoginToU128(githubLogin: string): bigint {
-    return BigInt(keccak256(toHex(githubLogin))) >> BigInt(128);
-
+export function githubLoginToU128(githubLogin: string): bigint {
+    return BigInt(keccak256(encodeAbiParameters(
+        [{ type: 'string' }], [githubLogin]
+    ))) & BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 }
 
 export async function updateOracle(walletClient: WalletClient, publicClient: any, owner: string, repo: string, prNumber: number, prStatus: PRStatus, usePaymaster: boolean): Promise<TransactionReceipt> {
