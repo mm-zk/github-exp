@@ -38,6 +38,12 @@
     <template #footer>
       <UButton
         color="primary"
+        label="Give Allowance"
+        @click="giveAllowance"
+        :loading="inProgress"
+      />
+      <UButton
+        color="primary"
         label="Create Bounty"
         @click="onCreate"
         :loading="inProgress"
@@ -54,6 +60,7 @@ import { Contracts } from "~/abi/contracts";
 import { DevNFTABI } from "~/abi/devNft.abi";
 import type { GitHub } from "~/types/github";
 import { formatUnits, hashMessage } from "viem";
+import { ReviewTokenABI } from "~/abi/reviewToken.abi";
 
 const props = defineProps<{ pr: GitHub.PR | null }>();
 const open = defineModel("open");
@@ -90,6 +97,30 @@ watch(
     rewardAmount.value = "";
   }
 );
+
+// We should check if people approved enough allowance, and if no, then ask them to give more.
+const giveAllowance = async () => {
+  const rewardTokenAddress = Contracts.ReviewToken;
+  try {
+    inProgress.value = true;
+    const { request } = await prepareWriteContract({
+      abi: ReviewTokenABI,
+      address: Contracts.ReviewToken,
+      functionName: "approve",
+      args: [
+        Contracts.Bounty,
+        BigInt(100),
+      ],
+    });
+    await writeContract(request);
+
+    open.value = false;
+  } catch (e) {
+    console.log("ERROR", e);
+  } finally {
+    inProgress.value = false;
+  }
+};
 
 const onCreate = async () => {
   const rewardTokenAddress = Contracts.ReviewToken;

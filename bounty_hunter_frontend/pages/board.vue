@@ -54,6 +54,8 @@ import { readContracts } from "@wagmi/core";
 import type { GitHub } from "~/types/github";
 import { BountyABI } from "~/abi/bounty.abi";
 import { Contracts } from "~/abi/contracts";
+import PRStatus from "~/components/pr/status.vue";
+import PRBountyCount from "~/components/pr/BountyCount.vue";
 
 const { account } = storeToRefs(useWagmi());
 
