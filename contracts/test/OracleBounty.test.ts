@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { Contract, Wallet, utils } from "zksync-ethers";
 import { getWallet, deployContract, LOCAL_RICH_WALLETS, getProvider } from '../deploy/utils';
-import { ethers } from "ethers";
+import { AbiCoder, ethers, keccak256, toUtf8Bytes } from "ethers";
 import deploy from '../deploy/deploy';
 
 describe("ReviewToken", function () {
@@ -289,7 +289,209 @@ describe("ReviewToken", function () {
         expect(bounties5[2][4]).to.be.equal(1);
         // Last one should be empty, as there are only 3 bounties.
         expect(bounties5[3][4]).to.be.equal(0);
+    });
 
+
+    function computeUint128Token(githubLogin: string): bigint {
+        const coder = AbiCoder.defaultAbiCoder();
+        const keccakHash = keccak256(coder.encode(["string"], [githubLogin]));
+        return BigInt(keccakHash) & BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    }
+
+    it("TestKeccakCompute", async function () {
+        expect(computeUint128Token("author")).to.be.equal(BigInt("0x5cd6cba91ec753a468181414297d8"));
+    })
+
+    it("TestWithConditions", async function () {
+        let authorWallet = getWallet(LOCAL_RICH_WALLETS[3].privateKey);
+        await nftContract.mint(authorWallet.address, "author").then(tx => tx.wait());
+
+
+        const tokenContract = await deployContract("ReviewToken", [], { wallet: ownerWallet, silent: true });
+        await tokenContract.transfer(userWallet.address, 100000).then(tx => tx.wait());
+
+
+        const userBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, userWallet);
+
+        const userTokenContract = new Contract(await tokenContract.getAddress(), tokenContract.interface, userWallet);
+        await userTokenContract.approve(await bountyContract.getAddress(), 100000).then(tx => tx.wait());
+
+        let conditions = {
+            abortTimestamp: 0,
+            // Author.
+            receiverInvolvement: 1,
+            degradationStartSeconds: 0,
+            degradationEndSeconds: 0,
+        };
+
+
+        // 
+        // Test author condition
+        //
+
+        let details = {
+            author: computeUint128Token("author"),
+            approvals: [{
+                reviewer: computeUint128Token("reviewer"),
+                reviewerDuration: 200,
+                authorDuration: 300,
+            },
+            {
+                reviewer: computeUint128Token("reviewer2"),
+                reviewerDuration: 400,
+                authorDuration: 500,
+            }
+            ],
+            isMergedToMain: true
+        };
+
+        {
+            await userBountyContract.addBounty(
+                "repo_conditions", 1, "author", 200, tokenContract, conditions
+            ).then(tx => tx.wait());
+            const authorBounty = Number(await userBountyContract.numBounties()) - 1;
+            expect(await userBountyContract.getBountiesCount("repo_conditions", 1)).to.be.equal(1);
+
+
+            // Author matches - so it should get 100% - so 200 tokens. 
+            expect(await userBountyContract.getBountyEstimate(authorBounty, details)).to.be.equal(200);
+
+            // Now author and receiver doesn't match - so it should return 0.
+            details.author = computeUint128Token("other author");
+            expect(await userBountyContract.getBountyEstimate(authorBounty, details)).to.be.equal(0);
+        }
+
+        {
+            details.author = computeUint128Token("author");
+            let conditions = {
+                abortTimestamp: 0,
+                // Author.
+                receiverInvolvement: 1,
+                degradationStartSeconds: 100,
+                degradationEndSeconds: 600,
+            };
+            await userBountyContract.addBounty(
+                "repo_conditions", 1, "author", 200, tokenContract, conditions
+            ).then(tx => tx.wait());
+            const authorBounty = Number(await userBountyContract.numBounties()) - 1;
+            // Author should be counted by 'max' of all durations - so 500 here.
+            expect(await userBountyContract.getBountyEstimate(authorBounty, details)).to.be.equal(40);
+
+        }
+
+        // 
+        // Test reviewer condition
+        //
+
+        conditions.receiverInvolvement = 2;
+        {
+            await userBountyContract.addBounty(
+                "repo_conditions", 1, "reviewer", 500, tokenContract, conditions
+            ).then(tx => tx.wait());
+            const reviewerBounty = Number(await userBountyContract.numBounties()) - 1;
+
+
+            // Reviewer matches - so it should get 100% - so 500 tokens. 
+            expect(await userBountyContract.getBountyEstimate(reviewerBounty, details)).to.be.equal(500);
+
+            details.approvals[0].reviewer = computeUint128Token("other_reviewer");
+            // Now, reviewer is not present - so no tokens. 
+            expect(await userBountyContract.getBountyEstimate(reviewerBounty, details)).to.be.equal(0);
+        }
+
+        conditions.degradationStartSeconds = 100;
+        conditions.degradationEndSeconds = 300;
+        {
+            await userBountyContract.addBounty(
+                "repo_conditions", 1, "reviewer", 500, tokenContract, conditions
+            ).then(tx => tx.wait());
+            const reviewerBounty = Number(await userBountyContract.numBounties()) - 1;
+            details.approvals[0].reviewer = computeUint128Token("reviewer");
+            details.approvals[0].reviewerDuration = 200;
+            // we took 200 second, so 50%.
+            expect(await userBountyContract.getBountyEstimate(reviewerBounty, details)).to.be.equal(250);
+
+            // Less thatn 'start' seconds - so 100%
+            details.approvals[0].reviewerDuration = 100;
+            expect(await userBountyContract.getBountyEstimate(reviewerBounty, details)).to.be.equal(500);
+
+
+            details.approvals[0].reviewerDuration = 800;
+            expect(await userBountyContract.getBountyEstimate(reviewerBounty, details)).to.be.equal(0);
+
+            details.approvals[0].reviewerDuration = 301;
+            expect(await userBountyContract.getBountyEstimate(reviewerBounty, details)).to.be.equal(0);
+
+            details.approvals[0].reviewerDuration = 300;
+            expect(await userBountyContract.getBountyEstimate(reviewerBounty, details)).to.be.equal(0);
+
+            details.approvals[0].reviewerDuration = 250;
+            expect(await userBountyContract.getBountyEstimate(reviewerBounty, details)).to.be.equal(125);
+        }
+
+
+        {
+            let conditions = {
+                abortTimestamp: 0,
+                // Reviewer.
+                receiverInvolvement: 2,
+                degradationStartSeconds: 0,
+                degradationEndSeconds: 0,
+            };
+
+            await userBountyContract.addBounty(
+                "repo_conditions", 1, "reviewer", 500, tokenContract, conditions
+            ).then(tx => tx.wait());
+            const reviewerBounty = Number(await userBountyContract.numBounties()) - 1;
+        }
+    });
+
+    it("TestWithConditionsAndClaim", async function () {
+        const tokenContract = await deployContract("ReviewToken", [], { wallet: ownerWallet, silent: true });
+        await tokenContract.transfer(userWallet.address, 1000).then(tx => tx.wait());
+        const reviewerBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, reviewerWallet);
+
+
+        const userBountyContract = new Contract(await bountyContract.getAddress(), bountyContract.interface, userWallet);
+
+        const userTokenContract = new Contract(await tokenContract.getAddress(), tokenContract.interface, userWallet);
+        await userTokenContract.approve(await bountyContract.getAddress(), 1000).then(tx => tx.wait());
+
+        let conditions = {
+            abortTimestamp: 0,
+            // Reviewer.
+            receiverInvolvement: 2,
+            degradationStartSeconds: 100,
+            degradationEndSeconds: 300,
+        };
+        let details = {
+            author: computeUint128Token("author"),
+            approvals: [{
+                reviewer: computeUint128Token("reviewer"),
+                reviewerDuration: 200,
+                authorDuration: 300,
+            },
+            {
+                reviewer: computeUint128Token("reviewer2"),
+                reviewerDuration: 400,
+                authorDuration: 500,
+            }
+            ],
+            isMergedToMain: true
+        };
+        await userBountyContract.addBounty(
+            "repo_conditions_and_claim", 1, "reviewer", 500, tokenContract, conditions
+        ).then(tx => tx.wait());
+        const reviewerBounty = Number(await userBountyContract.numBounties()) - 1;
+
+        await oracleContract.updatePRState("repo_conditions_and_claim", 1, 900, details).then(tx => tx.wait());
+
+        await reviewerBountyContract.claimBounty(reviewerBounty, details).then(tx => tx.wait());
+
+        // Reviewer should have received half.
+        // And the other half should return to user
+        expect(await tokenContract.balanceOf(reviewerWallet.address)).to.be.equal(250);
+        expect(await tokenContract.balanceOf(userWallet.address)).to.be.equal(750);
     });
 
 });

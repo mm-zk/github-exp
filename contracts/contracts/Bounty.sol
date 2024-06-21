@@ -56,6 +56,10 @@ function computeRewardPercent(
     uint64 start,
     uint64 end
 ) pure returns (uint64 percent) {
+    // If end is 0 - it means that we don't have any degradation.
+    if (end == 0) {
+        return 100;
+    }
     if (duration <= start) {
         // max.
         return 100;
@@ -65,7 +69,7 @@ function computeRewardPercent(
         return 0;
     }
 
-    uint128 x = uint128(duration - start) * 100;
+    uint128 x = uint128(end - duration) * 100;
     uint128 y = end - start;
     require(y > 0, "empty duration");
 
@@ -75,16 +79,21 @@ function computeRewardPercent(
 function computeRewardPercentForBounty(
     BountyConditions storage conditions,
     PRDetails calldata details,
-    uint256 reviewerTokenId
+    uint256 receiverTokenId
 ) view returns (uint64 percent) {
     // TOOD: verify the cast.
-    uint128 reviewer = uint128(reviewerTokenId);
+    uint128 receiver = uint128(receiverTokenId);
 
     if (conditions.receiverInvolvement == ReceiverInvolvement.Any) {
         // MAX.
         return 100;
     }
+
     if (conditions.receiverInvolvement == ReceiverInvolvement.Author) {
+        // Author is not receiver. Something is wrong, don't pay anything.
+        if (details.author != receiver) {
+            return 0;
+        }
         uint64 maxAuthorDuration = 0;
         for (uint i = 0; i < details.approvals.length; i++) {
             if (details.approvals[i].authorDuration > maxAuthorDuration) {
@@ -100,7 +109,7 @@ function computeRewardPercentForBounty(
     }
     // This condition means that the receiver was supposed to be a reviewer.
     for (uint i = 0; i < details.approvals.length; i++) {
-        if (details.approvals[i].reviewer == reviewer) {
+        if (details.approvals[i].reviewer == receiver) {
             return
                 computeRewardPercent(
                     details.approvals[i].reviewerDuration,
@@ -258,6 +267,28 @@ contract CodeReviewBounties {
         }
     }
 
+    function getBountyEstimate(
+        uint bountyId,
+        PRDetails calldata details
+    ) public view returns (uint256) {
+        Bounty storage bounty = bounties[bountyId];
+        require(!bounty.claimed, "Bounty already claimed");
+        uint64 percent = computeRewardPercentForBounty(
+            bounty.conditions,
+            details,
+            bounty.receiverNFTTokenId
+        );
+        require(percent <= 100, "Percent incorrect");
+
+        uint256 toTransfer = (bounty.amount * percent) / 100;
+        require(toTransfer <= bounty.amount, "Invalid mul");
+        return toTransfer;
+    }
+
+    function numBounties() public view returns (uint256) {
+        return bounties.length;
+    }
+
     // Claim a bounty
     function claimBounty(uint bountyId, PRDetails calldata details) public {
         Bounty storage bounty = bounties[bountyId];
@@ -286,7 +317,7 @@ contract CodeReviewBounties {
         );
         require(percent <= 100, "Percent incorrect");
 
-        uint256 toTransfer = (bounty.amount * 100) / percent;
+        uint256 toTransfer = (bounty.amount * percent) / 100;
         require(toTransfer <= bounty.amount, "Invalid mul");
         uint256 toReturn = bounty.amount - toTransfer;
 
