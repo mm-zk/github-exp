@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "dotenv -e ../contracts/.generated.env -- nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
@@ -21,6 +21,7 @@
     "@pinia/nuxt": "^0.5.1",
     "@wagmi/core": "^1.4.12",
     "axios": "^1.7.2",
+    "dotenv-cli": "^7.4.2",
     "pinia": "^2.1.7",
     "viem": "^1.20.3"
   }

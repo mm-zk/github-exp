@@ -1,6 +1,6 @@
 export enum Contracts {
-  Bounty = "0xC9E7A299A0179D11677f81c1e5720891342da36e",
-  ReviewToken = "0x7eC0Dd99d94FB7c0cD99181657ed8F27cD80d718",
-  DevNFT = "0x4A2837F5883c9d9873A6a897cF4CB1C24360c716",
-  Oracle = "0xE71D8d8Db0da90c21025bdcD535A91Aa52927640",
+  Bounty = import.meta.env.VITE_API_BOUNTY_ADDRESS!,
+  ReviewToken = import.meta.env.VITE_API_REVIEW_TOKEN_ADDRESS!,
+  DevNFT = import.meta.env.VITE_API_NFT_TOKEN_ADDRESS!,
+  Oracle = import.meta.env.VITE_API_ORACLE_ADDRESS!,
 }

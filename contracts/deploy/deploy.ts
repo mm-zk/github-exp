@@ -23,6 +23,12 @@ export default async function () {
     `NFT_TOKEN_ADDRESS=${await devNFT.getAddress()}`,
     `ORACLE_ADDRESS=${await oracleContract.getAddress()}`,
     `BOUNTY_ADDRESS=${await bountyContract.getAddress()}`,
+
+    // Small hack for frontend.
+    `VITE_API_REVIEW_TOKEN_ADDRESS=${await reviewToken.getAddress()}`,
+    `VITE_API_NFT_TOKEN_ADDRESS=${await devNFT.getAddress()}`,
+    `VITE_API_ORACLE_ADDRESS=${await oracleContract.getAddress()}`,
+    `VITE_API_BOUNTY_ADDRESS=${await bountyContract.getAddress()}`,
   ]
 
   fs.writeFileSync(".generated.env", content.join("\n"), 'utf-8');

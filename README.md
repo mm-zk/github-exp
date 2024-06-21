@@ -68,8 +68,12 @@ The next step would be to fetch the bounties from the contracts, and then do thi
 ## Installation
 
 * Start era-test-node 
-* in contracts - `npm run deploy` - will deploy the contracts, and put their addresses into ./.generated.env
-* then in backend - `npm run start` - this will mint NFTs and create the mapping from github names to addresses.
+* in contracts:
+    * put  WALLET_PRIVATE_KEY= in .env file (use one of era-test-node rich accounts)
+    * run `npm run deploy` - will deploy the contracts, and put their addresses into ./.generated.env
+    * You might also want to run `TARGET_WALLET=0xabc npm run fill_wallet` to give some tokens to your browser wallet.
+* then in backend:
+     - `npm run start` - this will mint NFTs and create the mapping from github names to addresses.
 * // TODO: then in backend, start the oracle
 * // TODO: then in backend, start the thing update github comments when bounties are created
 * in frontend - create .env file with the target repo (see .example.env)
