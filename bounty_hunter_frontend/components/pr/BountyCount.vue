@@ -1,19 +1,21 @@
 <template>
-  <UBadge
-    v-if="count >= 0"
-    color="gray"
-    variant="solid"
-    class="cursor-pointer"
-    :class="{ 'text-gray-500': count === 0 }"
-  >
-    {{ count
-    }}<UIcon
-      name="octicon:project-roadmap-16"
-      dynamic
-      class="ml-2"
-      :class="{ 'text-gray-300': count === 0 }"
-    />
-  </UBadge>
+  <NuxtLink v-if="pr" :to="`/pr/${pr.number}`">
+    <UBadge
+      v-if="count >= 0"
+      color="gray"
+      variant="solid"
+      class="cursor-pointer"
+      :class="{ 'text-gray-500': count === 0 }"
+    >
+      {{ count
+      }}<UIcon
+        name="octicon:project-roadmap-16"
+        dynamic
+        class="ml-2"
+        :class="{ 'text-gray-300': count === 0 }"
+      />
+    </UBadge>
+  </NuxtLink>
 </template>
 
 <script setup lang="ts">

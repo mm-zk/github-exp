@@ -32,6 +32,7 @@
         </template>
         <template #actions-data="{ row }">
           <UButton
+            v-if="!row.closed_at"
             icon="i-heroicons-plus-solid"
             class="cursor-pointer"
             size="2xs"

@@ -28,20 +28,19 @@
       </USelectMenu>
       <div class="mt-2">
         <strong>Amount</strong>
-        <UInput v-model="rewardAmount" placeholder="42">
-          <template #leading>
-            <UIcon name="ph:coin-vertical" dynamic />
-          </template>
-        </UInput>
+        <div class="flex">
+          <UInput v-model="rewardAmount" placeholder="42" class="mr-2">
+            <template #leading>
+              <UIcon name="ph:coin-vertical" dynamic />
+            </template>
+          </UInput>
+          <UButton @click="giveAllowance" :loading="allowanceInProgress">
+            <UIcon name="mdi:hand-coin-outline" dynamic />
+          </UButton>
+        </div>
       </div>
     </template>
     <template #footer>
-      <UButton
-        color="primary"
-        label="Give Allowance"
-        @click="giveAllowance"
-        :loading="inProgress"
-      />
       <UButton
         color="primary"
         label="Create Bounty"
@@ -54,13 +53,20 @@
 </template>
 
 <script setup lang="ts">
-import { prepareWriteContract, writeContract, readContract } from "@wagmi/core";
+import {
+  prepareWriteContract,
+  getContract,
+  writeContract,
+  readContract,
+} from "@wagmi/core";
 import { BountyABI } from "~/abi/bounty.abi";
 import { Contracts } from "~/abi/contracts";
 import { DevNFTABI } from "~/abi/devNft.abi";
 import type { GitHub } from "~/types/github";
 import { formatUnits, hashMessage } from "viem";
 import { ReviewTokenABI } from "~/abi/reviewToken.abi";
+
+const { account } = storeToRefs(useWagmi());
 
 const props = defineProps<{ pr: GitHub.PR | null }>();
 const open = defineModel("open");
@@ -89,6 +95,7 @@ const reviewers = computed(() => {
 
 const selected = ref(reviewers.value[0]);
 const inProgress = ref(false);
+const allowanceInProgress = ref(false);
 
 watch(
   () => open.value,
@@ -98,27 +105,35 @@ watch(
   }
 );
 
+const reviewTokenContract = getContract({
+  address: Contracts.ReviewToken,
+  abi: ReviewTokenABI,
+});
 // We should check if people approved enough allowance, and if no, then ask them to give more.
 const giveAllowance = async () => {
-  const rewardTokenAddress = Contracts.ReviewToken;
   try {
-    inProgress.value = true;
-    const { request } = await prepareWriteContract({
-      abi: ReviewTokenABI,
-      address: Contracts.ReviewToken,
-      functionName: "approve",
-      args: [
-        Contracts.Bounty,
-        BigInt(100),
-      ],
-    });
-    await writeContract(request);
+    allowanceInProgress.value = true;
+    const allowance = await reviewTokenContract.read.allowance([
+      account.value.address,
+      Contracts.Bounty,
+    ]);
 
-    open.value = false;
+    if (allowance < rewardAmount.value) {
+      const { request } = await prepareWriteContract({
+        abi: ReviewTokenABI,
+        address: Contracts.ReviewToken,
+        functionName: "approve",
+        args: [
+          Contracts.Bounty,
+          BigInt(+rewardAmount.value - Number(allowance)),
+        ],
+      });
+      await writeContract(request);
+    }
   } catch (e) {
     console.log("ERROR", e);
   } finally {
-    inProgress.value = false;
+    allowanceInProgress.value = false;
   }
 };
 

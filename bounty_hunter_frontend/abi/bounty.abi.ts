@@ -427,6 +427,64 @@ export const BountyABI = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "bountyId",
+        type: "uint256",
+      },
+      {
+        components: [
+          {
+            internalType: "uint128",
+            name: "author",
+            type: "uint128",
+          },
+          {
+            internalType: "bool",
+            name: "isMergedToMain",
+            type: "bool",
+          },
+          {
+            components: [
+              {
+                internalType: "uint128",
+                name: "reviewer",
+                type: "uint128",
+              },
+              {
+                internalType: "uint64",
+                name: "reviewerDuration",
+                type: "uint64",
+              },
+              {
+                internalType: "uint64",
+                name: "authorDuration",
+                type: "uint64",
+              },
+            ],
+            internalType: "struct ApprovedReviewer[]",
+            name: "approvals",
+            type: "tuple[]",
+          },
+        ],
+        internalType: "struct PRDetails",
+        name: "details",
+        type: "tuple",
+      },
+    ],
+    name: "getBountyEstimate",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "gitHubOracle",
     outputs: [
@@ -453,6 +511,19 @@ export const BountyABI = [
         internalType: "uint64",
         name: "",
         type: "uint64",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "numBounties",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
