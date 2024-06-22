@@ -93,11 +93,7 @@ function extractMintAddresses(comments: GithubComment[]) {
 let allAddresses = new Map();
 
 
-export async function mintNFTFromComments(walletClient: WalletClient, publicClient: any) {
-    const owner = 'mm-zk';  // Replace with the GitHub repository owner's username
-    const repo = 'advanced_docs';  // Replace with the repository name
-    const issueNumber = 1;  // Replace with the issue number
-
+export async function mintNFTFromComments(owner: string, repo: string, issueNumber: number, walletClient: WalletClient, publicClient: any) {
     const filteredAddresses = await fetchComments(owner, repo, issueNumber).then(
         (comments) => {
             return extractMintAddresses(comments ?? []);
