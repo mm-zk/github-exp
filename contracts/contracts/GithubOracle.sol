@@ -7,8 +7,8 @@ import "@matterlabs/zksync-contracts/l2/system-contracts/Constants.sol";
 
 // Reviewer that approved the pr.
 struct ApprovedReviewer {
-    // Keccak of the reviewer username (first 16 bytes).
-    uint128 reviewer;
+    // Reviewer.
+    string reviewer;
     // Time that reviewer took (in milliseconds).
     uint64 reviewerDuration;
     // Time that author spent (in milliseconds).
@@ -16,8 +16,8 @@ struct ApprovedReviewer {
 }
 
 struct PRDetails {
-    // Keccak of the author username (first 16 bytes).
-    uint128 author;
+    // Author.
+    string author;
     // Whether the PR is merged into main branch.
     bool isMergedToMain;
     // Reviewers that approved it.

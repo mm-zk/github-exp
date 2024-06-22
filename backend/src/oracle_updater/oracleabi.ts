@@ -19,9 +19,9 @@ export const oracleAbi = [
             {
                 "components": [
                     {
-                        "internalType": "uint128",
+                        "internalType": "string",
                         "name": "author",
-                        "type": "uint128"
+                        "type": "string"
                     },
                     {
                         "internalType": "bool",
@@ -31,9 +31,9 @@ export const oracleAbi = [
                     {
                         "components": [
                             {
-                                "internalType": "uint128",
+                                "internalType": "string",
                                 "name": "reviewer",
-                                "type": "uint128"
+                                "type": "string"
                             },
                             {
                                 "internalType": "uint64",

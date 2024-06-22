@@ -44,22 +44,18 @@ export function watch(publicClient: any, callback: OnPRRequested) {
 }
 
 interface ReviewTimeEntry {
-    reviewer: bigint;
+    reviewer: string;
     reviewerDuration: bigint;
     authorDuration: bigint;
 }
 
 interface PRDetails {
-    author: bigint,
+    author: string,
     isMergedToMain: boolean,
     approvals: ReviewTimeEntry[],
 }
 
-export function githubLoginToU128(githubLogin: string): bigint {
-    return BigInt(keccak256(encodeAbiParameters(
-        [{ type: 'string' }], [githubLogin]
-    ))) & BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-}
+
 
 export async function updateOracle(walletClient: WalletClient, publicClient: any, owner: string, repo: string, prNumber: number, prStatus: PRStatus, usePaymaster: boolean): Promise<TransactionReceipt> {
     const repository = `${owner}/${repo}`;
@@ -67,14 +63,14 @@ export async function updateOracle(walletClient: WalletClient, publicClient: any
     const approvers: ReviewTimeEntry[] = [...prStatus.reviewStatus.entries()].sort((a, b) => a[0].localeCompare(b[0])).filter(x => x[1].approved).map(x => {
 
         return {
-            reviewer: githubLoginToU128(x[0]),
+            reviewer: x[0],
             reviewerDuration: BigInt(x[1].reviewerDuration),
             authorDuration: BigInt(x[1].authorDuration)
         }
     });
 
     const prABI: PRDetails = {
-        author: githubLoginToU128(prStatus.author),
+        author: prStatus.author,
         isMergedToMain: prStatus.isMergedToMain,
         approvals: approvers
     };

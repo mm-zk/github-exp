@@ -27,10 +27,22 @@ describe("ZKsyncDevNFT", function () {
   });
 
   it("Should have correct token URI after minting", async function () {
-    const tokenId = keccak256(AbiCoder.defaultAbiCoder().encode(["string"], ["user1"])); // Assuming the first token minted has ID 1
+    const tokenId = await nftContract.githubToToken("user1");
     const tokenURI = await nftContract.tokenURI(tokenId);
-    expect(tokenURI).to.equal("http://github.com/matter-labs/zksync-era/98402519108269256004168789422940289721791679274040548528460083124727674742152");
+    expect(tokenURI).to.equal("http://github.com/user1");
   });
+
+  it("Check conversions", async function () {
+    const tokenId = await nftContract.githubToToken("user1");
+    const convertBack = await nftContract.tokenToGithub(tokenId);
+    expect(convertBack).to.be.equal("user1");
+
+
+    await expect(nftContract.tokenToGithub(0)).to.be.revertedWith("Empty value");
+    await expect(nftContract.githubToToken("")).to.be.revertedWith("Empty string");
+    await expect(nftContract.githubToToken("012345678901234567890123456789012")).to.be.revertedWith("String is too long");
+  });
+
 
   it("Should allow owner to mint multiple NFTs", async function () {
     const tx1 = await nftContract.mint(recipientWallet.address, "user2");

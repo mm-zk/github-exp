@@ -4,7 +4,7 @@ import { getWallet, deployContract, LOCAL_RICH_WALLETS, getProvider } from '../d
 import { AbiCoder, ethers, keccak256, toUtf8Bytes } from "ethers";
 import deploy from '../deploy/deploy';
 
-describe("ReviewToken", function () {
+describe("OracleBounty", function () {
     let oracleContract: Contract;
     let bountyContract: Contract;
     let tokenContract: Contract;
@@ -56,9 +56,9 @@ describe("ReviewToken", function () {
         expect(await tokenContract.balanceOf(reviewerWallet.address)).to.be.equal(0);
 
         let details = {
-            author: 113,
+            author: "auth",
             approvals: [{
-                reviewer: 188,
+                reviewer: "revi",
                 reviewerDuration: 0,
                 authorDuration: 0,
             }
@@ -127,9 +127,9 @@ describe("ReviewToken", function () {
 
 
         let details = {
-            author: 113,
+            author: "auth",
             approvals: [{
-                reviewer: 188,
+                reviewer: "revi",
                 reviewerDuration: 0,
                 authorDuration: 0,
             }
@@ -189,9 +189,9 @@ describe("ReviewToken", function () {
 
 
         let details = {
-            author: 113,
+            author: "auth",
             approvals: [{
-                reviewer: 188,
+                reviewer: "revi",
                 reviewerDuration: 0,
                 authorDuration: 0,
             }
@@ -303,15 +303,23 @@ describe("ReviewToken", function () {
 
     });
 
+    function stringToBigInt(str: string): bigint {
+        if (str.length > 30) {
+            throw new Error("String is too long");
+        }
 
-    function computeUint128Token(githubLogin: string): bigint {
-        const coder = AbiCoder.defaultAbiCoder();
-        const keccakHash = keccak256(coder.encode(["string"], [githubLogin]));
-        return BigInt(keccakHash) & BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+        let result = BigInt(0);
+        for (let i = 0; i < str.length; i++) {
+            result |= BigInt(str.charCodeAt(i)) << (BigInt(8) * BigInt(31 - i));
+        }
+
+        return result;
     }
 
     it("TestKeccakCompute", async function () {
-        expect(computeUint128Token("author")).to.be.equal(BigInt("0x5cd6cba91ec753a468181414297d8"));
+        expect(stringToBigInt("author")).to.be.equal(BigInt("0x617574686f720000000000000000000000000000000000000000000000000000"));
+        expect(stringToBigInt("a")).to.be.equal(BigInt("0x6100000000000000000000000000000000000000000000000000000000000000"));
+
     })
 
     it("TestWithConditions", async function () {
@@ -342,14 +350,14 @@ describe("ReviewToken", function () {
         //
 
         let details = {
-            author: computeUint128Token("author"),
+            author: "author",
             approvals: [{
-                reviewer: computeUint128Token("reviewer"),
+                reviewer: "reviewer",
                 reviewerDuration: 200,
                 authorDuration: 300,
             },
             {
-                reviewer: computeUint128Token("reviewer2"),
+                reviewer: "reviewer2",
                 reviewerDuration: 400,
                 authorDuration: 500,
             }
@@ -369,12 +377,12 @@ describe("ReviewToken", function () {
             expect(await userBountyContract.getBountyEstimate(authorBounty, details)).to.be.equal(200);
 
             // Now author and receiver doesn't match - so it should return 0.
-            details.author = computeUint128Token("other author");
+            details.author = "other author";
             expect(await userBountyContract.getBountyEstimate(authorBounty, details)).to.be.equal(0);
         }
 
         {
-            details.author = computeUint128Token("author");
+            details.author = "author";
             let conditions = {
                 abortTimestamp: 0,
                 // Author.
@@ -406,7 +414,7 @@ describe("ReviewToken", function () {
             // Reviewer matches - so it should get 100% - so 500 tokens. 
             expect(await userBountyContract.getBountyEstimate(reviewerBounty, details)).to.be.equal(500);
 
-            details.approvals[0].reviewer = computeUint128Token("other_reviewer");
+            details.approvals[0].reviewer = "other_reviewer";
             // Now, reviewer is not present - so no tokens. 
             expect(await userBountyContract.getBountyEstimate(reviewerBounty, details)).to.be.equal(0);
         }
@@ -418,7 +426,7 @@ describe("ReviewToken", function () {
                 "repo_conditions", 1, "reviewer", 500, tokenContract, conditions
             ).then(tx => tx.wait());
             const reviewerBounty = Number(await userBountyContract.numBounties()) - 1;
-            details.approvals[0].reviewer = computeUint128Token("reviewer");
+            details.approvals[0].reviewer = "reviewer";
             details.approvals[0].reviewerDuration = 200;
             // we took 200 second, so 50%.
             expect(await userBountyContract.getBountyEstimate(reviewerBounty, details)).to.be.equal(250);
@@ -477,14 +485,14 @@ describe("ReviewToken", function () {
             degradationEndSeconds: 300,
         };
         let details = {
-            author: computeUint128Token("author"),
+            author: "author",
             approvals: [{
-                reviewer: computeUint128Token("reviewer"),
+                reviewer: "reviewer",
                 reviewerDuration: 200,
                 authorDuration: 300,
             },
             {
-                reviewer: computeUint128Token("reviewer2"),
+                reviewer: "reviewer2",
                 reviewerDuration: 400,
                 authorDuration: 500,
             }

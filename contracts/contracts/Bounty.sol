@@ -76,13 +76,34 @@ function computeRewardPercent(
     return uint64(x / y);
 }
 
+function compareStringToUint256(
+    string memory str,
+    uint256 val
+) pure returns (bool) {
+    bytes memory b = bytes(str);
+    if (b.length > 30) {
+        return false;
+    }
+    if (b.length == 0) {
+        return false;
+    }
+
+    uint256 result = 0;
+
+    for (uint256 i = 0; i < b.length; i++) {
+        result |= uint256(uint8(b[i])) << (8 * (31 - i));
+    }
+    return result == val;
+}
+
 function computeRewardPercentForBounty(
     BountyConditions storage conditions,
     PRDetails calldata details,
-    uint256 receiverTokenId
+    uint256 receiver
 ) view returns (uint64 percent) {
     // TOOD: verify the cast.
-    uint128 receiver = uint128(receiverTokenId);
+    // FIXME
+    //uint128 receiver = uint128(receiverTokenId);
 
     if (conditions.receiverInvolvement == ReceiverInvolvement.Any) {
         // MAX.
@@ -91,7 +112,7 @@ function computeRewardPercentForBounty(
 
     if (conditions.receiverInvolvement == ReceiverInvolvement.Author) {
         // Author is not receiver. Something is wrong, don't pay anything.
-        if (details.author != receiver) {
+        if (!compareStringToUint256(details.author, receiver)) {
             return 0;
         }
         uint64 maxAuthorDuration = 0;
@@ -109,7 +130,7 @@ function computeRewardPercentForBounty(
     }
     // This condition means that the receiver was supposed to be a reviewer.
     for (uint i = 0; i < details.approvals.length; i++) {
-        if (details.approvals[i].reviewer == receiver) {
+        if (compareStringToUint256(details.approvals[i].reviewer, receiver)) {
             return
                 computeRewardPercent(
                     details.approvals[i].reviewerDuration,
