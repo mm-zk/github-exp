@@ -19,9 +19,9 @@ export const oracleAbi = [
             {
                 "components": [
                     {
-                        "internalType": "uint128",
+                        "internalType": "string",
                         "name": "author",
-                        "type": "uint128"
+                        "type": "string"
                     },
                     {
                         "internalType": "bool",
@@ -31,9 +31,9 @@ export const oracleAbi = [
                     {
                         "components": [
                             {
-                                "internalType": "uint128",
+                                "internalType": "string",
                                 "name": "reviewer",
-                                "type": "uint128"
+                                "type": "string"
                             },
                             {
                                 "internalType": "uint64",
@@ -60,5 +60,24 @@ export const oracleAbi = [
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "repository",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "prId",
+                "type": "uint256"
+            }
+        ],
+        "name": "PRUpdateRequested",
+        "type": "event"
     },
 ] as const;
