@@ -1,3 +1,5 @@
+// This is a copy of the file from backend/src/oracle_updater/utils.ts
+// In the future - we should change it to a common library.
 // Main method here is 'fetchPRStatus'.
 import { Octokit } from "@octokit/core";
 

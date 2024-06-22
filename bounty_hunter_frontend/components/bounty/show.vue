@@ -9,6 +9,9 @@
       {{ props.currentBlockTimestamp }} vs expiration
       {{ props.bounty.conditions.abortTimestamp }}
       )
+
+      <br>
+      PR Status: {{ prStatus }}
       <div v-if="isExpired">
         <button @click="abortBounty()">Abort bounty</button>
       </div>
@@ -56,6 +59,8 @@ import { BountyABI } from "~/abi/bounty.abi";
 import { Contracts } from "~/abi/contracts";
 import { DevNFTABI } from "~/abi/devNft.abi";
 import { ReviewTokenABI } from "~/abi/reviewToken.abi";
+import { Octokit } from "@octokit/core";
+
 
 const props = defineProps<{
   bounty: any;
@@ -66,6 +71,9 @@ console.log("preps: ", props.bounty);
 
 const { account } = storeToRefs(useWagmi());
 const repo = import.meta.env.VITE_API_TARGET_REPO;
+
+const octokit = new Octokit();
+
 
 const rewardTokenSymbol = ref("");
 
@@ -103,6 +111,33 @@ const askForOracleUpdate = async () => {
 const claimBounty = async () => {
   // TODO - call claim bounty on Bounty contract.
 };
+
+const prStatus = ref();
+
+// Gets current PR state from github.
+// Afterwards we should check whether it matches the one that is in oracle.
+// But it only makes sense to compare after PR is merged.
+const getCurrentPRState = async () => {
+  console.log("repo name is:", props.bounty.repositoryName);
+  const localPrStatus = await fetchPRStatusForOracle(octokit, props.bounty.repositoryName, Number(props.bounty.pullRequestId));
+  console.log("pr Status: ", localPrStatus);
+
+  function replacer(key: string, value: any) {
+    if (typeof value === 'bigint') {
+      return value.toString(); // or however you want to serialize it
+    } else {
+      return value;
+    }
+  }
+
+  // temporary put this as string, as javascript doesn't know how to handle bigint.
+  const jsonString = JSON.stringify(localPrStatus, replacer);
+  prStatus.value = jsonString;
+};
+
+getCurrentPRState();
+
+
 
 watch(
   props.bounty,
