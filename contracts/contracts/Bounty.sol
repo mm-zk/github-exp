@@ -136,10 +136,13 @@ contract CodeReviewBounties {
         // if 0 - then this is the first bounty of its type.
         // to access prevoius bounty: bounties[previousBountyIndex - 1]
         uint64 previousBountyIndex;
+        // index of the previous bounty for the same receiver.
+        uint64 previousUserBountyIndex;
     }
 
     Bounty[] public bounties;
     mapping(uint256 => uint64) public latestBounty;
+    mapping(uint256 => uint64) public latestUserBounty;
 
     IGitHubOracle public gitHubOracle;
     ZKsyncDEVNFT public devNFT;
@@ -201,6 +204,7 @@ contract CodeReviewBounties {
         uint256 receiverNFTTokenId = devNFT.githubToToken(
             receiverGithubUsername
         );
+        uint64 previousUserBountyIndex = latestUserBounty[receiverNFTTokenId];
 
         bounties.push(
             Bounty({
@@ -212,13 +216,15 @@ contract CodeReviewBounties {
                 erc20Token: erc20Token,
                 claimed: false,
                 conditions: conditions,
-                previousBountyIndex: previousBountyIndex
+                previousBountyIndex: previousBountyIndex,
+                previousUserBountyIndex: previousUserBountyIndex
             })
         );
 
         uint bountyId = bounties.length - 1;
         // Update the map.
         latestBounty[mapKey] = uint64(bountyId + 1);
+        latestUserBounty[receiverNFTTokenId] = uint64(bountyId + 1);
 
         emit BountyAdded(
             bountyId,
@@ -264,6 +270,39 @@ contract CodeReviewBounties {
             index += 1;
             previousBountyIndex = bounties[previousBountyIndex - 1]
                 .previousBountyIndex;
+        }
+    }
+
+    function getUserBountiesCount(
+        string calldata githubUsername
+    ) public view returns (uint64 result) {
+        result = 0;
+        uint index = 0;
+        uint256 mapKey = devNFT.githubToToken(githubUsername);
+
+        uint64 previousUserBountyIndex = latestUserBounty[mapKey];
+        while (previousUserBountyIndex != 0) {
+            result += 1;
+            index += 1;
+            previousUserBountyIndex = bounties[previousUserBountyIndex - 1]
+                .previousUserBountyIndex;
+        }
+    }
+
+    function getUserBounties(
+        string calldata githubUsername,
+        uint maxResults
+    ) public view returns (Bounty[] memory result) {
+        result = new Bounty[](maxResults);
+        uint index = 0;
+        uint256 mapKey = devNFT.githubToToken(githubUsername);
+
+        uint64 previousUserBountyIndex = latestUserBounty[mapKey];
+        while (previousUserBountyIndex != 0 && index < maxResults) {
+            result[index] = bounties[previousUserBountyIndex - 1];
+            index += 1;
+            previousUserBountyIndex = bounties[previousUserBountyIndex - 1]
+                .previousUserBountyIndex;
         }
     }
 

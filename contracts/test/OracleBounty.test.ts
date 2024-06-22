@@ -249,28 +249,33 @@ describe("ReviewToken", function () {
         await userTokenContract.approve(await bountyContract.getAddress(), 15).then(tx => tx.wait());
         // Create a bounty.
         await userBountyContract.addBounty(
-            "repo5", 1, "reviewer", 1, tokenContract, conditions
+            "repo5", 1, "local_reviewer", 1, tokenContract, conditions
         ).then(tx => tx.wait());
         expect(await userBountyContract.getBountiesCount("repo5", 1)).to.be.equal(1);
+        expect(await userBountyContract.getUserBountiesCount("local_reviewer")).to.be.equal(1);
+        expect(await userBountyContract.getUserBountiesCount("otherUser")).to.be.equal(0);
 
 
 
         await userBountyContract.addBounty(
-            "repo5", 2, "reviewer", 2, tokenContract, conditions
+            "repo5", 2, "local_reviewer1", 2, tokenContract, conditions
         ).then(tx => tx.wait());
 
         await userBountyContract.addBounty(
-            "repo5", 1, "reviewer", 3, tokenContract, conditions
+            "repo5", 1, "local_reviewer1", 3, tokenContract, conditions
         ).then(tx => tx.wait());
 
 
         await userBountyContract.addBounty(
-            "repo6", 2, "reviewer", 4, tokenContract, conditions
+            "repo6", 2, "local_reviewer", 4, tokenContract, conditions
         ).then(tx => tx.wait());
 
         await userBountyContract.addBounty(
-            "repo5", 1, "reviewer", 5, tokenContract, conditions
+            "repo5", 1, "local_reviewer", 5, tokenContract, conditions
         ).then(tx => tx.wait());
+
+        expect(await userBountyContract.getUserBountiesCount("local_reviewer")).to.be.equal(3);
+        expect(await userBountyContract.getUserBountiesCount("local_reviewer1")).to.be.equal(2);
 
 
         expect(await userBountyContract.getBountiesCount("repo5", 1)).to.be.equal(3);
@@ -279,9 +284,6 @@ describe("ReviewToken", function () {
         expect(await userBountyContract.getBountiesCount("repo5", 2)).to.be.equal(1);
 
         const bounties5 = await userBountyContract.getBounties("repo5", 1, 4);
-
-        console.log(bounties5);
-
         // bounties will be sorted in reverse direction.
         // here we are comparing the rewards.
         expect(bounties5[0][4]).to.be.equal(5);
@@ -289,6 +291,16 @@ describe("ReviewToken", function () {
         expect(bounties5[2][4]).to.be.equal(1);
         // Last one should be empty, as there are only 3 bounties.
         expect(bounties5[3][4]).to.be.equal(0);
+
+        const userBounties = await userBountyContract.getUserBounties("local_reviewer", 4);
+        // bounties will be sorted in reverse direction.
+        // here we are comparing the rewards.
+        expect(userBounties[0][4]).to.be.equal(5);
+        expect(userBounties[1][4]).to.be.equal(4);
+        expect(userBounties[2][4]).to.be.equal(1);
+        // Last one should be empty, as there are only 3 bounties.
+        expect(userBounties[3][4]).to.be.equal(0);
+
     });
 
 
