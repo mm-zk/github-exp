@@ -2,7 +2,6 @@
 import { Octokit } from "@octokit/core";
 
 
-
 export interface PRStatus {
     author: string,
     isMergedToMain: boolean,
@@ -177,3 +176,34 @@ export const fetchPRStatus = async (octokit: Octokit, owner: string, repo: strin
         reviewStatus,
     }
 }
+
+export interface ReviewTimeEntry {
+    reviewer: string;
+    reviewerDuration: bigint;
+    authorDuration: bigint;
+}
+
+export interface PRDetails {
+    author: string,
+    isMergedToMain: boolean,
+    approvals: ReviewTimeEntry[],
+}
+
+export const convertPRStatusToPRDetails = (prStatus: PRStatus): PRDetails => {
+    const approvers: ReviewTimeEntry[] = [...prStatus.reviewStatus.entries()].sort((a, b) => a[0].localeCompare(b[0])).filter(x => x[1].approved).map(x => {
+
+        return {
+            reviewer: x[0],
+            reviewerDuration: BigInt(x[1].reviewerDuration),
+            authorDuration: BigInt(x[1].authorDuration)
+        }
+    });
+
+    const prABI: PRDetails = {
+        author: prStatus.author,
+        isMergedToMain: prStatus.isMergedToMain,
+        approvals: approvers
+    };
+
+    return prABI;
+};

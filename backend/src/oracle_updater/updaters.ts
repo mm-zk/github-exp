@@ -1,6 +1,6 @@
 import { type Hex, WalletClient, keccak256, toHex, getContract, TransactionReceipt, encodeAbiParameters, PublicClient, decodeAbiParameters } from "viem";
 import * as dotenv from 'dotenv';
-import { PRStatus } from "./utils";
+import { PRDetails, PRStatus, ReviewTimeEntry } from "./utils";
 import { oracleAbi } from "./oracleabi";
 import { getGeneralPaymasterInput } from "viem/zksync";
 const axios = require('axios');
@@ -43,38 +43,9 @@ export function watch(publicClient: any, callback: OnPRRequested) {
     })
 }
 
-interface ReviewTimeEntry {
-    reviewer: string;
-    reviewerDuration: bigint;
-    authorDuration: bigint;
-}
 
-interface PRDetails {
-    author: string,
-    isMergedToMain: boolean,
-    approvals: ReviewTimeEntry[],
-}
-
-
-
-export async function updateOracle(walletClient: WalletClient, publicClient: any, owner: string, repo: string, prNumber: number, prStatus: PRStatus, usePaymaster: boolean): Promise<TransactionReceipt> {
+export async function updateOracle(walletClient: WalletClient, publicClient: any, owner: string, repo: string, prNumber: number, prDetails: PRDetails, usePaymaster: boolean): Promise<TransactionReceipt> {
     const repository = `${owner}/${repo}`;
-
-    const approvers: ReviewTimeEntry[] = [...prStatus.reviewStatus.entries()].sort((a, b) => a[0].localeCompare(b[0])).filter(x => x[1].approved).map(x => {
-
-        return {
-            reviewer: x[0],
-            reviewerDuration: BigInt(x[1].reviewerDuration),
-            authorDuration: BigInt(x[1].authorDuration)
-        }
-    });
-
-    const prABI: PRDetails = {
-        author: prStatus.author,
-        isMergedToMain: prStatus.isMergedToMain,
-        approvals: approvers
-    };
-
     const contract = getContract({
         address: GITHUB_ORACLE.address,
         abi: oracleAbi,
@@ -84,7 +55,7 @@ export async function updateOracle(walletClient: WalletClient, publicClient: any
     });
 
     const transactionHash = await contract.write.updatePRState([
-        repository, BigInt(prNumber), BigInt(new Date().getTime()), prABI
+        repository, BigInt(prNumber), BigInt(new Date().getTime()), prDetails
     ], {
         chain: walletClient.chain!, account: walletClient.account!,
         paymaster: usePaymaster ? GITHUB_ORACLE.address : null,

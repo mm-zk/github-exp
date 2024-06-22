@@ -1,7 +1,7 @@
 // Main method here is 'fetchPRStatus'.
 import { Octokit } from "@octokit/core";
 import { config } from 'dotenv';
-import { fetchPRStatus } from "./utils";
+import { convertPRStatusToPRDetails, fetchPRStatus } from "./utils";
 import { getAccount, getPublicClient, getWalletClient } from "../utils/client";
 import { updateOracle, watch } from "./updaters";
 import { Hex, PublicClient } from "viem";
@@ -19,8 +19,9 @@ const usePaymaster = false;
 
 function fetchAndUpdate(owner: string, repo: string, prId: number) {
     fetchPRStatus(octokit, owner, repo, prId).then(prStatus => {
+        const prDetails = convertPRStatusToPRDetails(prStatus);
         console.log(prStatus);
-        updateOracle(walletClient, publicClient, owner, repo, prId, prStatus, usePaymaster).then(
+        updateOracle(walletClient, publicClient, owner, repo, prId, prDetails, usePaymaster).then(
             receipt => {
                 console.log("Finished");
                 console.log(receipt);
