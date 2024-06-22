@@ -42,6 +42,7 @@
 
 <script setup lang="ts">
 import { prepareWriteContract, writeContract, getContract } from "@wagmi/core";
+import { parseUnits } from "viem";
 import { Contracts } from "~/abi/contracts";
 import { DevNFTABI } from "~/abi/devNft.abi";
 import { ReviewTokenABI } from "~/abi/reviewToken.abi";
