@@ -12,6 +12,7 @@
             v-for="(bounty, index) in bounties"
             :key="index"
             :bounty="bounty"
+            :currentBlockTimestamp="currentBlockTimestamp"
           />
         </UPageGrid>
         <!-- <div class="mt-6 flex justify-center">
@@ -32,7 +33,9 @@ import {
   getContract,
   writeContract,
   readContract,
+  getPublicClient,
 } from "@wagmi/core";
+import type { Hex, PublicClient } from "viem";
 import { watch } from "vue";
 import { BountyABI } from "~/abi/bounty.abi";
 import { Contracts } from "~/abi/contracts";
@@ -49,6 +52,14 @@ const bountyContract = getContract({
 
 const bountyCount = ref(0);
 const bounties = ref([]);
+const currentBlockTimestamp = ref(0);
+
+const publicClient: PublicClient = getPublicClient();
+
+publicClient.getBlock().then((block: any) => {
+  currentBlockTimestamp.value = Number(block.timestamp);
+});
+
 // const pageCount = 1;
 // const page = ref(1);
 

@@ -239,6 +239,11 @@ export const BountyABI = [
         "internalType": "uint64",
         "name": "previousUserBountyIndex",
         "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "bountyId",
+        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -254,9 +259,9 @@ export const BountyABI = [
       {
         "components": [
           {
-            "internalType": "uint128",
+            "internalType": "string",
             "name": "author",
-            "type": "uint128"
+            "type": "string"
           },
           {
             "internalType": "bool",
@@ -266,9 +271,9 @@ export const BountyABI = [
           {
             "components": [
               {
-                "internalType": "uint128",
+                "internalType": "string",
                 "name": "reviewer",
-                "type": "uint128"
+                "type": "string"
               },
               {
                 "internalType": "uint64",
@@ -402,6 +407,11 @@ export const BountyABI = [
             "internalType": "uint64",
             "name": "previousUserBountyIndex",
             "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "bountyId",
+            "type": "uint64"
           }
         ],
         "internalType": "struct CodeReviewBounties.Bounty[]",
@@ -446,9 +456,9 @@ export const BountyABI = [
       {
         "components": [
           {
-            "internalType": "uint128",
+            "internalType": "string",
             "name": "author",
-            "type": "uint128"
+            "type": "string"
           },
           {
             "internalType": "bool",
@@ -458,9 +468,9 @@ export const BountyABI = [
           {
             "components": [
               {
-                "internalType": "uint128",
+                "internalType": "string",
                 "name": "reviewer",
-                "type": "uint128"
+                "type": "string"
               },
               {
                 "internalType": "uint64",
@@ -581,6 +591,11 @@ export const BountyABI = [
           {
             "internalType": "uint64",
             "name": "previousUserBountyIndex",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "bountyId",
             "type": "uint64"
           }
         ],

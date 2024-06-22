@@ -6,55 +6,46 @@
         Browsing #{{ login }} github
       </UDashboardToolbar>
       <div v-if="notMapped">
-        ADDRESS NOT Mapped - please visit <button @click="goToIssue">github issue page</button> ({{ mappingAddress }})
+        ADDRESS NOT Mapped - please visit
+        <button @click="goToIssue">github issue page</button> ({{
+          mappingAddress
+        }})
       </div>
       <div v-if="!notMapped">
-        Account is mapped to an NFT.<br>
-        Current owner of this github is: {{ nftowner }} <br>
+        Account is mapped to an NFT.<br />
+        Current owner of this github is: {{ nftowner }} <br />
 
         <div v-if="account.isConnected">
-
-        <div v-if="walletOwnsAccount">
-          YOU ARE THE OWNER.
-        </div>
-        <div v-if="!walletOwnsAccount">
-          You are NOT the owner - maybe you connected a wrong wallet?
-        </div>
+          <div v-if="walletOwnsAccount">YOU ARE THE OWNER.</div>
+          <div v-if="!walletOwnsAccount">
+            You are NOT the owner - maybe you connected a wrong wallet?
+          </div>
         </div>
 
         <div v-if="!account.isConnected">
-
           You didn't connect the wallet, but you can still browse.
-        
         </div>
 
-      <UCard>
-        {{ nftowner }}
-        <br />
-        RVW: {{reviewTokens}}
-      </UCard>
-
+        <UCard>
+          {{ nftowner }}
+          <br />
+          RVW: {{ reviewTokens }}
+        </UCard>
       </div>
       <div>
-        Bounties for this user {{bountyCount}} <br>
+        Bounties for this user {{ bountyCount }} <br />
 
         <UContainer class="mt-4">
-        <UPageGrid>
-          <BountyShow
-            v-for="(bounty, index) in bounties"
-            :key="index"
-            :bounty="bounty"
-          />
-        </UPageGrid>
-      </UContainer>
-
-
-
-
+          <UPageGrid>
+            <BountyShow
+              v-for="(bounty, index) in bounties"
+              :key="index"
+              :bounty="bounty"
+              :currentBlockTimestamp="currentBlockTimestamp"
+            />
+          </UPageGrid>
+        </UContainer>
       </div>
-      
-
-      
     </UDashboardPanel>
   </UDashboardPage>
 </template>
@@ -65,8 +56,9 @@ import {
   getContract,
   writeContract,
   readContract,
+  getPublicClient,
 } from "@wagmi/core";
-import type { Hex } from "viem";
+import type { Hex, PublicClient } from "viem";
 import { watch } from "vue";
 import { BountyABI } from "~/abi/bounty.abi";
 import { Contracts } from "~/abi/contracts";
@@ -77,7 +69,7 @@ const route = useRoute();
 const { account } = storeToRefs(useWagmi());
 const repo = import.meta.env.VITE_API_TARGET_REPO;
 
-const mappingAddress = import.meta.env.VITE_API_MAPPING_URL; 
+const mappingAddress = import.meta.env.VITE_API_MAPPING_URL;
 
 const login = route.params.githublogin as string;
 
@@ -88,16 +80,15 @@ const NFTContract = getContract({
 
 const reviewTokens = ref(0);
 
-
 const mappedAddress = ref("");
 const notMapped = ref(false);
 
 const tokenId = ref(BigInt(0));
 const nftowner = ref("");
 
+const publicClient: PublicClient = getPublicClient();
 
 const walletOwnsAccount = ref(false);
-
 
 const reviewTokenContract = getContract({
   address: Contracts.ReviewToken as unknown as Hex,
@@ -109,14 +100,18 @@ const bountyContract = getContract({
   abi: BountyABI,
 });
 
-
 const goToIssue = async () => {
   window.location.href = mappingAddress;
-}
-
+};
 
 const bountyCount = ref(0);
 const bounties = ref([]);
+const currentBlockTimestamp = ref(0);
+
+publicClient.getBlock().then((block: any) => {
+  console.log("setting bt: ", block.timestamp);
+  currentBlockTimestamp.value = Number(block.timestamp);
+});
 // const pageCount = 1;
 // const page = ref(1);
 
@@ -132,32 +127,26 @@ const loadBountyData = async () => {
   console.log(bounties.value);
 };
 
-
 const loadNFTMapping = async () => {
-    const loginExists = await NFTContract.read.exists([login]);
-    if (loginExists) {
-      mappedAddress.value = "exists";
-      const token = await NFTContract.read.githubToToken([login]);
-      tokenId.value = token;
-      const owner = await NFTContract.read.ownerOf([token]);
-      nftowner.value = owner;
+  const loginExists = await NFTContract.read.exists([login]);
+  if (loginExists) {
+    mappedAddress.value = "exists";
+    const token = await NFTContract.read.githubToToken([login]);
+    tokenId.value = token;
+    const owner = await NFTContract.read.ownerOf([token]);
+    nftowner.value = owner;
 
-      walletOwnsAccount.value = (owner == account.value.address);
+    walletOwnsAccount.value = owner == account.value.address;
 
-      reviewTokens.value = Number(
-        await reviewTokenContract.read.balanceOf([owner])
-      );
-
-
-    } else {
-      mappedAddress.value = "not set";
-      notMapped.value = true;
-    }
-    loadBountyData();
-
-
+    reviewTokens.value = Number(
+      await reviewTokenContract.read.balanceOf([owner])
+    );
+  } else {
+    mappedAddress.value = "not set";
+    notMapped.value = true;
+  }
+  loadBountyData();
 };
 
 loadNFTMapping();
-
 </script>

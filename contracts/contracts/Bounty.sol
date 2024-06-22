@@ -155,10 +155,12 @@ contract CodeReviewBounties {
         BountyConditions conditions;
         // index to the previous bounty for the same repo & pull id.
         // if 0 - then this is the first bounty of its type.
-        // to access prevoius bounty: bounties[previousBountyIndex - 1]
+        // to access previous bounty: bounties[previousBountyIndex - 1]
         uint64 previousBountyIndex;
         // index of the previous bounty for the same receiver.
         uint64 previousUserBountyIndex;
+        // Id of this bounty.
+        uint64 bountyId;
     }
 
     Bounty[] public bounties;
@@ -238,7 +240,8 @@ contract CodeReviewBounties {
                 claimed: false,
                 conditions: conditions,
                 previousBountyIndex: previousBountyIndex,
-                previousUserBountyIndex: previousUserBountyIndex
+                previousUserBountyIndex: previousUserBountyIndex,
+                bountyId: uint64(bounties.length)
             })
         );
 
@@ -398,7 +401,7 @@ contract CodeReviewBounties {
         Bounty storage bounty = bounties[bountyId];
         require(!bounty.claimed, "Bounty already claimed");
         require(
-            bounty.conditions.abortTimestamp > block.timestamp,
+            bounty.conditions.abortTimestamp < block.timestamp,
             "Bounty not ready for abort yet"
         );
         bounty.claimed = true;
