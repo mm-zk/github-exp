@@ -67,11 +67,10 @@ const eventToSimplifiedEvent = (entry: any): SimplifiedTimelineEntry | null => {
     return null;
 }
 
-const fetchPRDetailsAndCalculateReviewTime = async (octokit: Octokit, owner: string, repo: string, prNumber: number) => {
+const fetchPRDetailsAndCalculateReviewTime = async (octokit: Octokit, repo: string, prNumber: number) => {
     try {
         // Fetch PR timeline which includes review requests, comments, reviews, etc.
-        const { data: timeline } = await octokit.request('GET /repos/{owner}/{repo}/issues/{pull_number}/timeline', {
-            owner,
+        const { data: timeline } = await octokit.request('GET /repos/{repo}/issues/{pull_number}/timeline', {
             repo,
             pull_number: prNumber,
             mediaType: {
@@ -159,16 +158,15 @@ const calculateReviewTimes = (timeline: any[]) => {
 };
 
 
-export const fetchPRStatus = async (octokit: Octokit, owner: string, repo: string, prNumber: number): Promise<PRStatus> => {
+export const fetchPRStatus = async (octokit: Octokit, repo: string, prNumber: number): Promise<PRStatus> => {
 
     // Fetch PR details
-    const { data: prData } = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
-        owner,
+    const { data: prData } = await octokit.request('GET /repos/{repo}/pulls/{pull_number}', {
         repo,
         pull_number: prNumber
     });
 
-    const reviewStatus = (await fetchPRDetailsAndCalculateReviewTime(octokit, owner, repo, prNumber))!;
+    const reviewStatus = (await fetchPRDetailsAndCalculateReviewTime(octokit, repo, prNumber))!;
 
     return {
         author: prData.user.login,
@@ -207,3 +205,8 @@ export const convertPRStatusToPRDetails = (prStatus: PRStatus): PRDetails => {
 
     return prABI;
 };
+
+export const fetchPRStatusForOracle = async (octokit: Octokit, repo: string, prNumber: number): Promise<PRDetails> => {
+    const prStatus = await fetchPRStatus(octokit, repo, prNumber);
+    return convertPRStatusToPRDetails(prStatus);
+}

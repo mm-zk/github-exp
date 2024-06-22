@@ -13,7 +13,7 @@ const GITHUB_ORACLE = {
 }
 
 
-type OnPRRequested = (repo: string, prId: bigint) => void;
+type OnPRRequested = (repo: string, prId: number) => void;
 
 export function watch(publicClient: any, callback: OnPRRequested) {
     console.log("Starting...", GITHUB_ORACLE.address);
@@ -37,15 +37,14 @@ export function watch(publicClient: any, callback: OnPRRequested) {
             if (regex.test(payload[0])) {
                 console.log("Invalid chars: ", payload[0]);
             } else {
-                callback(payload[0], payload[1]);
+                callback(payload[0], Number(payload[1]));
             }
         }
     })
 }
 
 
-export async function updateOracle(walletClient: WalletClient, publicClient: any, owner: string, repo: string, prNumber: number, prDetails: PRDetails, usePaymaster: boolean): Promise<TransactionReceipt> {
-    const repository = `${owner}/${repo}`;
+export async function updateOracle(walletClient: WalletClient, publicClient: any, repo: string, prNumber: number, prDetails: PRDetails, usePaymaster: boolean): Promise<TransactionReceipt> {
     const contract = getContract({
         address: GITHUB_ORACLE.address,
         abi: oracleAbi,
@@ -55,7 +54,7 @@ export async function updateOracle(walletClient: WalletClient, publicClient: any
     });
 
     const transactionHash = await contract.write.updatePRState([
-        repository, BigInt(prNumber), BigInt(new Date().getTime()), prDetails
+        repo, BigInt(prNumber), BigInt(new Date().getTime()), prDetails
     ], {
         chain: walletClient.chain!, account: walletClient.account!,
         paymaster: usePaymaster ? GITHUB_ORACLE.address : null,
