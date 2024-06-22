@@ -12,7 +12,8 @@
     "clean": "hardhat clean",
     "test": "hardhat test --network hardhat",
     "test_debug": "hardhat test --network inMemoryNode",
-    "fill_wallet": "hardhat run deploy/fillwallet.ts"
+    "fill_wallet": "hardhat run deploy/fillwallet.ts",
+    "assign_nft": "hardhat run deploy/assignNFT.ts"
   },
   "devDependencies": {
     "@matterlabs/hardhat-zksync": "^1.0.0",
