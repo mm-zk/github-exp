@@ -3,7 +3,7 @@ import { Octokit } from "@octokit/core";
 import { config } from 'dotenv';
 import { fetchPRStatus } from "./utils";
 import { getAccount, getPublicClient, getWalletClient } from "../utils/client";
-import { updateOracle } from "./updaters";
+import { updateOracle, watch } from "./updaters";
 import { Hex, PublicClient } from "viem";
 
 
@@ -29,4 +29,15 @@ function fetchAndUpdate(owner: string, repo: string, prId: number) {
     })
 }
 
-fetchAndUpdate('matter-labs', 'zksync-era', 2269);
+function splitAndUpdate(repo: string, prId: bigint) {
+    const parts = repo.split('/');
+    if (parts.length === 2) {
+        fetchAndUpdate(parts[0], parts[1], Number(prId));
+    } else {
+        console.log("invalid repo path " + repo);
+    }
+}
+
+
+//fetchAndUpdate('matter-labs', 'zksync-era', 2269);
+watch(publicClient, splitAndUpdate);

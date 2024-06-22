@@ -61,4 +61,23 @@ export const oracleAbi = [
         "stateMutability": "nonpayable",
         "type": "function"
     },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "repository",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "prId",
+                "type": "uint256"
+            }
+        ],
+        "name": "PRUpdateRequested",
+        "type": "event"
+    },
 ] as const;

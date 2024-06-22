@@ -1,4 +1,4 @@
-import { type Hex, WalletClient, keccak256, toHex, getContract, TransactionReceipt, encodeAbiParameters } from "viem";
+import { type Hex, WalletClient, keccak256, toHex, getContract, TransactionReceipt, encodeAbiParameters, PublicClient, decodeAbiParameters } from "viem";
 import * as dotenv from 'dotenv';
 import { PRStatus } from "./utils";
 import { oracleAbi } from "./oracleabi";
@@ -13,6 +13,35 @@ const GITHUB_ORACLE = {
 }
 
 
+type OnPRRequested = (repo: string, prId: bigint) => void;
+
+export function watch(publicClient: any, callback: OnPRRequested) {
+    console.log("Starting...", GITHUB_ORACLE.address);
+
+    return publicClient.watchContractEvent({
+        address: GITHUB_ORACLE.address,
+        abi: oracleAbi,
+        eventName: 'PRUpdateRequested',
+        onLogs: (logs: any) => {
+            console.log(logs);
+            console.log("parsing...");
+            console.log(logs[0].data);
+            const payload = decodeAbiParameters(
+                [
+                    { name: 'repository', type: 'string' },
+                    { name: 'pr', type: 'uint256' }
+                ],
+                logs[0].data
+            );
+            const regex = /[^a-zA-Z0-9\/\-\_]/;
+            if (regex.test(payload[0])) {
+                console.log("Invalid chars: ", payload[0]);
+            } else {
+                callback(payload[0], payload[1]);
+            }
+        }
+    })
+}
 
 interface ReviewTimeEntry {
     reviewer: bigint;
