@@ -1,5 +1,7 @@
 <template>
   <ULandingCard title="Bounty" description="A bounty for PR" color="primary">
+    PR: {{props.bounty.repositoryName}} {{ props.bounty.pullRequestId }} <br>
+    Claimed: {{props.bounty.claimed}}
     <UBadge
       color="amber"
       variant="outline"
@@ -36,6 +38,7 @@ const repo = import.meta.env.VITE_API_TARGET_REPO;
 
 const rewardTokenSymbol = ref("");
 
+
 const devTokenContract = getContract({
   address: Contracts.DevNFT,
   abi: DevNFTABI,
@@ -50,16 +53,20 @@ watch(
   props.bounty,
   async (bountyData) => {
     console.log(bountyData);
-    const ownerAddress = await devTokenContract.read.ownerOf([
+    await devTokenContract.read.ownerOf([
       bountyData.receiverNFTTokenId,
-    ]);
-
-    const data = await devTokenContract.read.balanceOf([ownerAddress]);
-    if (Number(data) > 0) {
-      // with the github tokenid being a keccak, I can't actually
-      // get the actual github username from the address side?
-    }
-
+    ]).then(ownerAddress => {
+        devTokenContract.read.balanceOf([ownerAddress]).then(data => {
+          if (Number(data) > 0) {
+        // with the github tokenid being a keccak, I can't actually
+        // get the actual github username from the address side?
+          }
+        });
+    }).catch(error => {
+      console.log("receiver doesnt have NFT yet");
+    });
+    
+  
     rewardTokenSymbol.value = await rewardTokenContract.read.symbol();
   },
   { immediate: true }

@@ -1,571 +1,717 @@
 export const BountyABI = [
   {
-    inputs: [],
-    stateMutability: "nonpayable",
-    type: "constructor",
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
   },
   {
-    anonymous: false,
-    inputs: [
+    "anonymous": false,
+    "inputs": [
       {
-        indexed: false,
-        internalType: "uint256",
-        name: "bountyId",
-        type: "uint256",
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "bountyId",
+        "type": "uint256"
       },
       {
-        indexed: true,
-        internalType: "address",
-        name: "claimant",
-        type: "address",
-      },
+        "indexed": true,
+        "internalType": "address",
+        "name": "claimant",
+        "type": "address"
+      }
     ],
-    name: "BountyAborted",
-    type: "event",
+    "name": "BountyAborted",
+    "type": "event"
   },
   {
-    anonymous: false,
-    inputs: [
+    "anonymous": false,
+    "inputs": [
       {
-        indexed: false,
-        internalType: "uint256",
-        name: "bountyId",
-        type: "uint256",
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "bountyId",
+        "type": "uint256"
       },
       {
-        indexed: false,
-        internalType: "string",
-        name: "repositoryName",
-        type: "string",
+        "indexed": false,
+        "internalType": "string",
+        "name": "repositoryName",
+        "type": "string"
       },
       {
-        indexed: false,
-        internalType: "uint256",
-        name: "pullRequestId",
-        type: "uint256",
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "pullRequestId",
+        "type": "uint256"
       },
       {
-        indexed: false,
-        internalType: "string",
-        name: "receiverGithubUsername",
-        type: "string",
+        "indexed": false,
+        "internalType": "string",
+        "name": "receiverGithubUsername",
+        "type": "string"
       },
       {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       },
       {
-        indexed: false,
-        internalType: "address",
-        name: "erc20Token",
-        type: "address",
-      },
+        "indexed": false,
+        "internalType": "address",
+        "name": "erc20Token",
+        "type": "address"
+      }
     ],
-    name: "BountyAdded",
-    type: "event",
+    "name": "BountyAdded",
+    "type": "event"
   },
   {
-    anonymous: false,
-    inputs: [
+    "anonymous": false,
+    "inputs": [
       {
-        indexed: false,
-        internalType: "uint256",
-        name: "bountyId",
-        type: "uint256",
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "bountyId",
+        "type": "uint256"
       },
       {
-        indexed: true,
-        internalType: "address",
-        name: "claimant",
-        type: "address",
-      },
+        "indexed": true,
+        "internalType": "address",
+        "name": "claimant",
+        "type": "address"
+      }
     ],
-    name: "BountyClaimed",
-    type: "event",
+    "name": "BountyClaimed",
+    "type": "event"
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: "uint256",
-        name: "bountyId",
-        type: "uint256",
-      },
+        "internalType": "uint256",
+        "name": "bountyId",
+        "type": "uint256"
+      }
     ],
-    name: "abortBounty",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    "name": "abortBounty",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: "string",
-        name: "repositoryName",
-        type: "string",
+        "internalType": "string",
+        "name": "repositoryName",
+        "type": "string"
       },
       {
-        internalType: "uint256",
-        name: "pullRequestId",
-        type: "uint256",
+        "internalType": "uint256",
+        "name": "pullRequestId",
+        "type": "uint256"
       },
       {
-        internalType: "string",
-        name: "receiverGithubUsername",
-        type: "string",
+        "internalType": "string",
+        "name": "receiverGithubUsername",
+        "type": "string"
       },
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       },
       {
-        internalType: "address",
-        name: "erc20Token",
-        type: "address",
+        "internalType": "address",
+        "name": "erc20Token",
+        "type": "address"
       },
       {
-        components: [
+        "components": [
           {
-            internalType: "uint256",
-            name: "abortTimestamp",
-            type: "uint256",
+            "internalType": "uint256",
+            "name": "abortTimestamp",
+            "type": "uint256"
           },
           {
-            internalType: "enum ReceiverInvolvement",
-            name: "receiverInvolvement",
-            type: "uint8",
+            "internalType": "enum ReceiverInvolvement",
+            "name": "receiverInvolvement",
+            "type": "uint8"
           },
           {
-            internalType: "uint64",
-            name: "degradationStartSeconds",
-            type: "uint64",
+            "internalType": "uint64",
+            "name": "degradationStartSeconds",
+            "type": "uint64"
           },
           {
-            internalType: "uint64",
-            name: "degradationEndSeconds",
-            type: "uint64",
-          },
+            "internalType": "uint64",
+            "name": "degradationEndSeconds",
+            "type": "uint64"
+          }
         ],
-        internalType: "struct BountyConditions",
-        name: "conditions",
-        type: "tuple",
-      },
+        "internalType": "struct BountyConditions",
+        "name": "conditions",
+        "type": "tuple"
+      }
     ],
-    name: "addBounty",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    "name": "addBounty",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
-    name: "bounties",
-    outputs: [
+    "name": "bounties",
+    "outputs": [
       {
-        internalType: "address",
-        name: "sender",
-        type: "address",
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
       },
       {
-        internalType: "string",
-        name: "repositoryName",
-        type: "string",
+        "internalType": "string",
+        "name": "repositoryName",
+        "type": "string"
       },
       {
-        internalType: "uint256",
-        name: "pullRequestId",
-        type: "uint256",
+        "internalType": "uint256",
+        "name": "pullRequestId",
+        "type": "uint256"
       },
       {
-        internalType: "uint256",
-        name: "receiverNFTTokenId",
-        type: "uint256",
+        "internalType": "uint256",
+        "name": "receiverNFTTokenId",
+        "type": "uint256"
       },
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       },
       {
-        internalType: "address",
-        name: "erc20Token",
-        type: "address",
+        "internalType": "address",
+        "name": "erc20Token",
+        "type": "address"
       },
       {
-        internalType: "bool",
-        name: "claimed",
-        type: "bool",
+        "internalType": "bool",
+        "name": "claimed",
+        "type": "bool"
       },
       {
-        components: [
+        "components": [
           {
-            internalType: "uint256",
-            name: "abortTimestamp",
-            type: "uint256",
+            "internalType": "uint256",
+            "name": "abortTimestamp",
+            "type": "uint256"
           },
           {
-            internalType: "enum ReceiverInvolvement",
-            name: "receiverInvolvement",
-            type: "uint8",
+            "internalType": "enum ReceiverInvolvement",
+            "name": "receiverInvolvement",
+            "type": "uint8"
           },
           {
-            internalType: "uint64",
-            name: "degradationStartSeconds",
-            type: "uint64",
+            "internalType": "uint64",
+            "name": "degradationStartSeconds",
+            "type": "uint64"
           },
           {
-            internalType: "uint64",
-            name: "degradationEndSeconds",
-            type: "uint64",
-          },
+            "internalType": "uint64",
+            "name": "degradationEndSeconds",
+            "type": "uint64"
+          }
         ],
-        internalType: "struct BountyConditions",
-        name: "conditions",
-        type: "tuple",
+        "internalType": "struct BountyConditions",
+        "name": "conditions",
+        "type": "tuple"
       },
       {
-        internalType: "uint64",
-        name: "previousBountyIndex",
-        type: "uint64",
+        "internalType": "uint64",
+        "name": "previousBountyIndex",
+        "type": "uint64"
       },
+      {
+        "internalType": "uint64",
+        "name": "previousUserBountyIndex",
+        "type": "uint64"
+      }
     ],
-    stateMutability: "view",
-    type: "function",
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: "uint256",
-        name: "bountyId",
-        type: "uint256",
+        "internalType": "uint256",
+        "name": "bountyId",
+        "type": "uint256"
       },
       {
-        components: [
+        "components": [
           {
-            internalType: "uint128",
-            name: "author",
-            type: "uint128",
+            "internalType": "uint128",
+            "name": "author",
+            "type": "uint128"
           },
           {
-            internalType: "bool",
-            name: "isMergedToMain",
-            type: "bool",
+            "internalType": "bool",
+            "name": "isMergedToMain",
+            "type": "bool"
           },
           {
-            components: [
+            "components": [
               {
-                internalType: "uint128",
-                name: "reviewer",
-                type: "uint128",
+                "internalType": "uint128",
+                "name": "reviewer",
+                "type": "uint128"
               },
               {
-                internalType: "uint64",
-                name: "reviewerDuration",
-                type: "uint64",
+                "internalType": "uint64",
+                "name": "reviewerDuration",
+                "type": "uint64"
               },
               {
-                internalType: "uint64",
-                name: "authorDuration",
-                type: "uint64",
-              },
+                "internalType": "uint64",
+                "name": "authorDuration",
+                "type": "uint64"
+              }
             ],
-            internalType: "struct ApprovedReviewer[]",
-            name: "approvals",
-            type: "tuple[]",
-          },
+            "internalType": "struct ApprovedReviewer[]",
+            "name": "approvals",
+            "type": "tuple[]"
+          }
         ],
-        internalType: "struct PRDetails",
-        name: "details",
-        type: "tuple",
-      },
+        "internalType": "struct PRDetails",
+        "name": "details",
+        "type": "tuple"
+      }
     ],
-    name: "claimBounty",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    "name": "claimBounty",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
-    inputs: [],
-    name: "devNFT",
-    outputs: [
+    "inputs": [],
+    "name": "devNFT",
+    "outputs": [
       {
-        internalType: "contract ZKsyncDEVNFT",
-        name: "",
-        type: "address",
-      },
+        "internalType": "contract ZKsyncDEVNFT",
+        "name": "",
+        "type": "address"
+      }
     ],
-    stateMutability: "view",
-    type: "function",
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: "string",
-        name: "repositoryName",
-        type: "string",
+        "internalType": "string",
+        "name": "repositoryName",
+        "type": "string"
       },
       {
-        internalType: "uint256",
-        name: "pullRequestId",
-        type: "uint256",
+        "internalType": "uint256",
+        "name": "pullRequestId",
+        "type": "uint256"
       },
       {
-        internalType: "uint256",
-        name: "maxResults",
-        type: "uint256",
-      },
+        "internalType": "uint256",
+        "name": "maxResults",
+        "type": "uint256"
+      }
     ],
-    name: "getBounties",
-    outputs: [
+    "name": "getBounties",
+    "outputs": [
       {
-        components: [
+        "components": [
           {
-            internalType: "address",
-            name: "sender",
-            type: "address",
+            "internalType": "address",
+            "name": "sender",
+            "type": "address"
           },
           {
-            internalType: "string",
-            name: "repositoryName",
-            type: "string",
+            "internalType": "string",
+            "name": "repositoryName",
+            "type": "string"
           },
           {
-            internalType: "uint256",
-            name: "pullRequestId",
-            type: "uint256",
+            "internalType": "uint256",
+            "name": "pullRequestId",
+            "type": "uint256"
           },
           {
-            internalType: "uint256",
-            name: "receiverNFTTokenId",
-            type: "uint256",
+            "internalType": "uint256",
+            "name": "receiverNFTTokenId",
+            "type": "uint256"
           },
           {
-            internalType: "uint256",
-            name: "amount",
-            type: "uint256",
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
           },
           {
-            internalType: "address",
-            name: "erc20Token",
-            type: "address",
+            "internalType": "address",
+            "name": "erc20Token",
+            "type": "address"
           },
           {
-            internalType: "bool",
-            name: "claimed",
-            type: "bool",
+            "internalType": "bool",
+            "name": "claimed",
+            "type": "bool"
           },
           {
-            components: [
+            "components": [
               {
-                internalType: "uint256",
-                name: "abortTimestamp",
-                type: "uint256",
+                "internalType": "uint256",
+                "name": "abortTimestamp",
+                "type": "uint256"
               },
               {
-                internalType: "enum ReceiverInvolvement",
-                name: "receiverInvolvement",
-                type: "uint8",
+                "internalType": "enum ReceiverInvolvement",
+                "name": "receiverInvolvement",
+                "type": "uint8"
               },
               {
-                internalType: "uint64",
-                name: "degradationStartSeconds",
-                type: "uint64",
+                "internalType": "uint64",
+                "name": "degradationStartSeconds",
+                "type": "uint64"
               },
               {
-                internalType: "uint64",
-                name: "degradationEndSeconds",
-                type: "uint64",
-              },
+                "internalType": "uint64",
+                "name": "degradationEndSeconds",
+                "type": "uint64"
+              }
             ],
-            internalType: "struct BountyConditions",
-            name: "conditions",
-            type: "tuple",
+            "internalType": "struct BountyConditions",
+            "name": "conditions",
+            "type": "tuple"
           },
           {
-            internalType: "uint64",
-            name: "previousBountyIndex",
-            type: "uint64",
+            "internalType": "uint64",
+            "name": "previousBountyIndex",
+            "type": "uint64"
           },
+          {
+            "internalType": "uint64",
+            "name": "previousUserBountyIndex",
+            "type": "uint64"
+          }
         ],
-        internalType: "struct CodeReviewBounties.Bounty[]",
-        name: "result",
-        type: "tuple[]",
-      },
+        "internalType": "struct CodeReviewBounties.Bounty[]",
+        "name": "result",
+        "type": "tuple[]"
+      }
     ],
-    stateMutability: "view",
-    type: "function",
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: "string",
-        name: "repositoryName",
-        type: "string",
+        "internalType": "string",
+        "name": "repositoryName",
+        "type": "string"
       },
       {
-        internalType: "uint256",
-        name: "pullRequestId",
-        type: "uint256",
-      },
+        "internalType": "uint256",
+        "name": "pullRequestId",
+        "type": "uint256"
+      }
     ],
-    name: "getBountiesCount",
-    outputs: [
+    "name": "getBountiesCount",
+    "outputs": [
       {
-        internalType: "uint64",
-        name: "result",
-        type: "uint64",
-      },
+        "internalType": "uint64",
+        "name": "result",
+        "type": "uint64"
+      }
     ],
-    stateMutability: "view",
-    type: "function",
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: "uint256",
-        name: "bountyId",
-        type: "uint256",
+        "internalType": "uint256",
+        "name": "bountyId",
+        "type": "uint256"
       },
       {
-        components: [
+        "components": [
           {
-            internalType: "uint128",
-            name: "author",
-            type: "uint128",
+            "internalType": "uint128",
+            "name": "author",
+            "type": "uint128"
           },
           {
-            internalType: "bool",
-            name: "isMergedToMain",
-            type: "bool",
+            "internalType": "bool",
+            "name": "isMergedToMain",
+            "type": "bool"
           },
           {
-            components: [
+            "components": [
               {
-                internalType: "uint128",
-                name: "reviewer",
-                type: "uint128",
+                "internalType": "uint128",
+                "name": "reviewer",
+                "type": "uint128"
               },
               {
-                internalType: "uint64",
-                name: "reviewerDuration",
-                type: "uint64",
+                "internalType": "uint64",
+                "name": "reviewerDuration",
+                "type": "uint64"
               },
               {
-                internalType: "uint64",
-                name: "authorDuration",
-                type: "uint64",
-              },
+                "internalType": "uint64",
+                "name": "authorDuration",
+                "type": "uint64"
+              }
             ],
-            internalType: "struct ApprovedReviewer[]",
-            name: "approvals",
-            type: "tuple[]",
-          },
+            "internalType": "struct ApprovedReviewer[]",
+            "name": "approvals",
+            "type": "tuple[]"
+          }
         ],
-        internalType: "struct PRDetails",
-        name: "details",
-        type: "tuple",
-      },
+        "internalType": "struct PRDetails",
+        "name": "details",
+        "type": "tuple"
+      }
     ],
-    name: "getBountyEstimate",
-    outputs: [
+    "name": "getBountyEstimate",
+    "outputs": [
       {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
-    stateMutability: "view",
-    type: "function",
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [],
-    name: "gitHubOracle",
-    outputs: [
+    "inputs": [
       {
-        internalType: "contract IGitHubOracle",
-        name: "",
-        type: "address",
+        "internalType": "string",
+        "name": "githubUsername",
+        "type": "string"
       },
+      {
+        "internalType": "uint256",
+        "name": "maxResults",
+        "type": "uint256"
+      }
     ],
-    stateMutability: "view",
-    type: "function",
+    "name": "getUserBounties",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "sender",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "repositoryName",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pullRequestId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "receiverNFTTokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "erc20Token",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "claimed",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "abortTimestamp",
+                "type": "uint256"
+              },
+              {
+                "internalType": "enum ReceiverInvolvement",
+                "name": "receiverInvolvement",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint64",
+                "name": "degradationStartSeconds",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "degradationEndSeconds",
+                "type": "uint64"
+              }
+            ],
+            "internalType": "struct BountyConditions",
+            "name": "conditions",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint64",
+            "name": "previousBountyIndex",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "previousUserBountyIndex",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct CodeReviewBounties.Bounty[]",
+        "name": "result",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
+        "internalType": "string",
+        "name": "githubUsername",
+        "type": "string"
+      }
     ],
-    name: "latestBounty",
-    outputs: [
+    "name": "getUserBountiesCount",
+    "outputs": [
       {
-        internalType: "uint64",
-        name: "",
-        type: "uint64",
-      },
+        "internalType": "uint64",
+        "name": "result",
+        "type": "uint64"
+      }
     ],
-    stateMutability: "view",
-    type: "function",
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [],
-    name: "numBounties",
-    outputs: [
+    "inputs": [],
+    "name": "gitHubOracle",
+    "outputs": [
       {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
+        "internalType": "contract IGitHubOracle",
+        "name": "",
+        "type": "address"
+      }
     ],
-    stateMutability: "view",
-    type: "function",
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [],
-    name: "owner",
-    outputs: [
+    "inputs": [
       {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
-    stateMutability: "view",
-    type: "function",
+    "name": "latestBounty",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: "address",
-        name: "devNFTAddress",
-        type: "address",
-      },
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
-    name: "setDevNFT",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    "name": "latestUserBounty",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [
+    "inputs": [],
+    "name": "numBounties",
+    "outputs": [
       {
-        internalType: "address",
-        name: "oracleAddress",
-        type: "address",
-      },
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
-    name: "setGitHubOracleAddress",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    "stateMutability": "view",
+    "type": "function"
   },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "devNFTAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setDevNFT",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "oracleAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setGitHubOracleAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
 ] as const;
