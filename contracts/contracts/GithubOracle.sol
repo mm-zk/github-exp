@@ -35,6 +35,8 @@ interface IGitHubOracle {
 contract GitHubOracle is IGitHubOracle, IPaymaster {
     address public owner;
     mapping(address => bool) public authorizedUpdaters;
+    // State variable to store the required gas
+    uint public requiredGasForPRRequest;
 
     modifier onlyBootloader() {
         require(
@@ -75,11 +77,19 @@ contract GitHubOracle is IGitHubOracle, IPaymaster {
         authorizedUpdaters[updater] = authorized;
     }
 
+    // Function to update the requiredGas, only callable by the owner
+    function setRequiredGas(uint _newRequiredGas) public onlyOwner {
+        requiredGasForPRRequest = _newRequiredGas;
+    }
+
     // Users can request updates for a PR
     function requestPRUpdate(
         string calldata repository,
         uint256 prId
     ) public payable {
+        uint minimumRequiredAmount = requiredGasForPRRequest * tx.gasprice;
+        require(msg.value >= minimumRequiredAmount, "Insufficient amount sent");
+
         emit PRUpdateRequested(repository, prId);
     }
 
@@ -184,4 +194,9 @@ contract GitHubOracle is IGitHubOracle, IPaymaster {
     ) external payable override onlyBootloader {}
 
     receive() external payable {}
+
+    // Function to withdraw Ether from the contract, only callable by the owner
+    function withdraw() public onlyOwner {
+        payable(owner).transfer(address(this).balance);
+    }
 }

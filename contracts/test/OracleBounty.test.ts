@@ -183,6 +183,26 @@ describe("OracleBounty", function () {
     });
 
 
+    it("With MinGas on request", async function () {
+        const reviewerOracleContract = new Contract(await oracleContract.getAddress(), oracleContract.interface, reviewerWallet);
+
+        await reviewerOracleContract.requestPRUpdate("mingasrepo", 3, {
+        }).then(tx => tx.wait());
+
+
+        await (oracleContract.setRequiredGas(10000)).then(tx => tx.wait());
+
+        await expect(reviewerOracleContract.requestPRUpdate("mingasrepo", 3, {
+
+        }).then(tx => tx.wait())).to.be.revertedWith("Insufficient amount sent");
+
+        // This should work.
+        // TODO: do better value estimation here.
+        await reviewerOracleContract.requestPRUpdate("mingasrepo", 3, {
+            value: ethers.parseEther("0.01")
+        }).then(tx => tx.wait());
+    });
+
     it("Test Paymaster Oracle", async function () {
         await ownerWallet.transfer({ to: await oracleContract.getAddress(), amount: ethers.parseEther("1") }).then(tx => tx.wait());
 

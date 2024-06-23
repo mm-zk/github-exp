@@ -262,6 +262,19 @@ export const OracleABI = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "requiredGasForPRRequest",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -275,6 +288,19 @@ export const OracleABI = [
       }
     ],
     "name": "setAuthorization",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_newRequiredGas",
+        "type": "uint256"
+      }
+    ],
+    "name": "setRequiredGas",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -512,6 +538,13 @@ export const OracleABI = [
     "name": "verifyPRDetails",
     "outputs": [],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
