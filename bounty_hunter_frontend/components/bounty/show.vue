@@ -1,25 +1,46 @@
 <template>
   <ULandingCard title="Bounty" description="A bounty for PR" color="primary">
-    PR: {{ props.bounty.repositoryName }} {{ props.bounty.pullRequestId }}
+    <UButton @click="goToPR">PR {{ props.bounty.repositoryName }}/{{ props.bounty.pullRequestId }}</UButton>
     <br />
-    Receiver: {{ bountyReceiver }} @ {{ bountyReceiverAddress }}
-    <br />
-    Claimed: {{ props.bounty.claimed }} <br />
+    <UTooltip :text=bountyReceiverAddress>
+      <UBadge
+        :color="textColor"
+        variant="outline"
+        class="flex justify-center flex-row"
+      >
+      <UIcon
+        class="w-12 h-12"
+        :class="iconClass"
+        name="mdi:arrow-right"
+        dynamic
+      />
+      Receiver: {{ bountyReceiver }} 
+      </UBadge>
+    </UTooltip> 
 
-    <div v-if="!props.bounty.claimed">
+
+    <button @click="isShowDebug = !isShowDebug" class="toggle-button">
+      {{ isShowDebug ? 'Hide Debug Info' : 'Show Debug Info' }}
+    </button>
+    <div v-if="isShowDebug" class="debug-info">
+      <p>
       Expired: {{ isExpired }} (current timestamp:
       {{ props.currentBlockTimestamp }} vs expiration
       {{ props.bounty.conditions.abortTimestamp }}
       )
-
-      <br>
+      </p>
       PR Status: {{ prDetailsString }}
+
+
+    </div>
+    
+    <div v-if="!props.bounty.claimed">
+      
       <div v-if="isExpired">
         <UButton @click="abortBounty()">Abort bounty</UButton>
       </div>
       <div v-if="!isExpired">
         <div v-if="isClaimable">
-          Can claim
           <div v-if="!isOracleUpToDate">
             Oracle is behind. Last update: {{ latestOracleUpdate }} <br/>
             <UButton @click="askForOracleUpdate()">ASK for oracle update</UButton>
@@ -28,21 +49,23 @@
             <UButton @click="claimBounty()">CLAIM NOW.</UButton>
           </div>
         </div>
-        <div v-if="!isClaimable">Cannot claim PR not merged yet</div>
+        <div v-if="!isClaimable">
+          <UButton :disabled=true color="white"  >Cannot claim: PR not merged yet </UButton></div>
       </div>
     </div>
 
     <UBadge
-      color="amber"
+      :color="textColor"
       variant="outline"
       class="flex justify-center flex-col"
     >
       <UIcon
-        class="w-12 h-12 text-amber-600"
+        class="w-12 h-12"
+        :class="iconClass"
         name="ph:coin-vertical-duotone"
         dynamic
       />
-      <strong class="text-amber-600"
+      <strong :class="iconClass"
         >{{ Number(bounty.amount) }} {{ rewardTokenSymbol }}</strong
       >
     </UBadge>
@@ -74,7 +97,6 @@ console.log("preps: ", props.currentBlockTimestamp);
 console.log("preps: ", props.bounty);
 
 const { account } = storeToRefs(useWagmi());
-const repo = import.meta.env.VITE_API_TARGET_REPO;
 
 const octokit = new Octokit();
 
@@ -85,11 +107,39 @@ const rewardTokenSymbol = ref("");
 const bountyReceiver = ref("");
 const bountyReceiverAddress = ref("");
 
-
 // TODO: check PR status.
 const isClaimable = ref(true);
 const isOracleUpToDate = ref(false);
 const latestOracleUpdate = ref(0);
+
+const isShowDebug = ref(false);
+
+const iconClass = computed(() => {
+  if (props.bounty.claimed == true) {
+    return "text-gray-600";  
+  }
+  if (isExpired) {
+    return "text-red-600";  
+  }
+  if (isClaimable.value) {
+    return "text-green-600";  
+  }
+  return "text-amber-600";
+});
+
+const textColor = computed(() => {
+  if (props.bounty.claimed == true) {
+    return "gray";  
+  }
+  if (isExpired) {
+    return "red";  
+  }
+  if (isClaimable.value) {
+    return "green";  
+  }
+  return "amber";
+
+});
 
 const devTokenContract = getContract({
   address: Contracts.DevNFT,
@@ -105,6 +155,10 @@ const oracleContract = getContract({
   address: Contracts.Oracle,
   abi: OracleABI,
 });
+
+const goToPR = async () => {
+  window.location.href = "https://github.com/" + props.bounty.repositoryName + "/pull/" + props.bounty.pullRequestId;
+};
 
 const isExpired =
   props.bounty.conditions.abortTimestamp < props.currentBlockTimestamp;
@@ -210,8 +264,7 @@ const compareWithOracle = async (prDetails: PRDetails) => {
 
 
 getCurrentPRState().then(prDetails => {
-  // FIXME: uncomment
-  //isClaimable.value = prDetails.isMergedToMain;
+  isClaimable.value = prDetails.isMergedToMain;
   compareWithOracle(prDetails);
 
 });

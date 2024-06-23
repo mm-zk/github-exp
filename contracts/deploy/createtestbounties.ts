@@ -39,8 +39,8 @@ export async function main() {
         abortTimestamp: BigInt(new Date().getTime() + 8640000),
         receiverInvolvement: 2,
         degradationStartSeconds: 0n,
-        // 1h.
-        degradationEndSeconds: 3600n
+        // no degradation for now.
+        degradationEndSeconds: 0n
     };
 
 
