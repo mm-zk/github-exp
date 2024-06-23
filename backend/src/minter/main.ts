@@ -28,7 +28,6 @@ async function main() {
     console.log("Whitelist length: ", authors.length);
 
 
-    //setInterval(refreshComments, 1000 * 10);
     const owner = process.env.MINT_REPO_OWNER!;
     const repo = process.env.MINT_REPO!;
     const issueNumber = parseInt(process.env.MINT_REPO_ISSUE!, 10);
@@ -37,4 +36,6 @@ async function main() {
 }
 
 main();
+
+//setInterval(main, 1000 * 10);
 
