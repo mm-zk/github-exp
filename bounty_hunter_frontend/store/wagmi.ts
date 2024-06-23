@@ -9,7 +9,7 @@ export const chains: Chain[] = [
   zkSync,
   zkSyncSepoliaTestnet,
   ...(
-      import.meta.env.MODE === "development" ?
+    import.meta.env.MODE === "development" ?
       [
         {
           id: 270,
@@ -49,28 +49,39 @@ export const chains: Chain[] = [
         },
       ]
       : []
-    ),
+  ),
 ];
+
 export const defaultChain = import.meta.env.MODE === "development" ? zkSyncSepoliaTestnet : zkSync;
+
+// Function to reorder the array based on a specified chain_id
+function prioritizeChainById(chainList: Chain[], targetId: number): Chain[] {
+  // First, find the index of the chain with the given targetId
+  const targetIndex = chainList.findIndex(chain => chain.id === targetId);
+
+  // If the chain was found and it's not already the first element
+  if (targetIndex > 0) {
+    // Remove the target chain from its current position
+    const [targetChain] = chainList.splice(targetIndex, 1);
+    // Insert the target chain at the beginning of the array
+    chainList.unshift(targetChain);
+  }
+
+  return chainList;
+}
 
 export const useWagmi = defineStore("wagmi", () => {
   const { publicClient, webSocketPublicClient } = configureChains(
-    chains,
+    prioritizeChainById(chains, Number(import.meta.env.VITE_API_DEFAULT_CHAIN)),
     [
       publicProvider(),
     ],
   )
-  
+
   const wagmiConfig = createConfig({
     autoConnect: true,
     connectors: [
       new MetaMaskConnector({ chains }),
-      new CoinbaseWalletConnector({
-        chains,
-        options: {
-          appName: 'wagmi',
-        },
-      }),
       new InjectedConnector({
         chains,
         options: {

@@ -1,16 +1,27 @@
 <template>
   <div>
-    <h1>GitHub ZKSync</h1>
 
-    <Connect />
+    <ULandingCard title="PR Bounties" description="Get rewarded for PR reviews" color="primary">
+      Connect your wallet to create & claim bounties or just browse on the left.
+      <Connect />
 
-    <Connected>
-    <Github :repo=repo />
-    </Connected>
+      Account connected: {{ account.isConnected }} <br>
+
+      Wallet Network: {{ network.chain }} <br>
+
+      Current chain: {{ selectedChain.name }}
+
+      <Connected>
+      </Connected>
+    </ULandingCard>
+
   </div>
 </template>
 
 <script lang="ts" setup>
-useWagmi();
-const repo = import.meta.env.VITE_API_TARGET_REPO;
+import { getPublicClient } from '@wagmi/core';
+
+const { account, network} = storeToRefs(useWagmi());
+
+const selectedChain = getPublicClient().chain;
 </script>
