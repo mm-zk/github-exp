@@ -59,7 +59,23 @@ describe("ZKsyncDevNFT", function () {
       await tx3.wait();
       expect.fail("Expected mint to revert, but it didn't");
     } catch (error) {
-      expect(error.message).to.include("Ownable: caller is not the owner");
+      expect(error.message).to.include("Unauthorized");
     }
+  });
+  it("Allow authorized users to mint", async function () {
+    await expect((nftContract.connect(recipientWallet) as Contract)
+      .mint(recipientWallet.address, "unauthorizedtest1")).to.be.revertedWith("Unauthorized");
+
+    await nftContract.setAuthorization(recipientWallet.address, true).then(tx => tx.wait());
+    // Now minting should work.
+    await (nftContract.connect(recipientWallet) as Contract).mint(recipientWallet.address, "unauthorizedtest2").then(tx => tx.wait())
+
+    // Now take permission away.
+    await nftContract.setAuthorization(recipientWallet.address, false).then(tx => tx.wait());
+
+    await expect((nftContract.connect(recipientWallet) as Contract)
+      .mint(recipientWallet.address, "unauthorizedtest3")).to.be.revertedWith("Unauthorized");
+
+
   });
 });

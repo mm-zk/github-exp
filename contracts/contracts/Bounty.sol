@@ -101,10 +101,6 @@ function computeRewardPercentForBounty(
     PRDetails calldata details,
     uint256 receiver
 ) view returns (uint64 percent) {
-    // TOOD: verify the cast.
-    // FIXME
-    //uint128 receiver = uint128(receiverTokenId);
-
     if (conditions.receiverInvolvement == ReceiverInvolvement.Any) {
         // MAX.
         return 100;
