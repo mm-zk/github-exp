@@ -36,8 +36,12 @@
           </UInput>
           <UButton @click="giveAllowance" :loading="allowanceInProgress">
             <UIcon name="mdi:hand-coin-outline" dynamic />
+            Allowance
           </UButton>
+
         </div>
+        <UAlert color="red" v-if="insufficientAllowance"  title="Insufficient allowance"  description="Please give more allowance by clicking the button above"/>
+
       </div>
     </template>
     <template #footer>
@@ -63,7 +67,7 @@ import { BountyABI } from "~/abi/bounty.abi";
 import { Contracts } from "~/abi/contracts";
 import { DevNFTABI } from "~/abi/devNft.abi";
 import type { GitHub } from "~/types/github";
-import { formatUnits, hashMessage } from "viem";
+import { ContractFunctionExecutionError, ContractFunctionRevertedError, formatUnits, hashMessage } from "viem";
 import { ReviewTokenABI } from "~/abi/reviewToken.abi";
 
 const { account } = storeToRefs(useWagmi());
@@ -96,6 +100,7 @@ const reviewers = computed(() => {
 const selected = ref(reviewers.value[0]);
 const inProgress = ref(false);
 const allowanceInProgress = ref(false);
+const insufficientAllowance = ref(false);
 
 watch(
   () => open.value,
@@ -117,6 +122,7 @@ const giveAllowance = async () => {
       account.value.address,
       Contracts.Bounty,
     ]);
+    insufficientAllowance.value = false;
 
     if (allowance < rewardAmount.value) {
       const { request } = await prepareWriteContract({
@@ -137,11 +143,22 @@ const giveAllowance = async () => {
   }
 };
 
+const getRevertReason = (error: ContractFunctionExecutionError): string | undefined => {
+    const cause = error.cause;
+    if (cause.name == "ContractFunctionRevertedError") {
+      const c = cause as ContractFunctionRevertedError;
+      return c.reason;
+    }
+    console.log("Unexpected error from contract: ", error);
+    return undefined;
+}
+
+
 const onCreate = async () => {
   const rewardTokenAddress = Contracts.ReviewToken;
   try {
     inProgress.value = true;
-    const { request } = await prepareWriteContract({
+    const { request} = await prepareWriteContract({
       abi: BountyABI,
       address: Contracts.Bounty,
       functionName: "addBounty",
@@ -165,6 +182,14 @@ const onCreate = async () => {
     open.value = false;
   } catch (e) {
     console.log("ERROR", e);
+    const error = e as ContractFunctionExecutionError;
+    const reason = getRevertReason(error);
+    if (reason == "ERC20: insufficient allowance") {
+      insufficientAllowance.value = true;
+    } else {
+      showError("Contract write failed with: " + reason);
+    }
+
   } finally {
     inProgress.value = false;
   }
