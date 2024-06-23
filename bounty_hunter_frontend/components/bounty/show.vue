@@ -13,19 +13,19 @@
       )
 
       <br>
-      PR Status: {{ prStatus }}
+      PR Status: {{ prDetailsString }}
       <div v-if="isExpired">
-        <button @click="abortBounty()">Abort bounty</button>
+        <UButton @click="abortBounty()">Abort bounty</UButton>
       </div>
       <div v-if="!isExpired">
         <div v-if="isClaimable">
           Can claim
           <div v-if="!isOracleUpToDate">
-            Oracle is behind.
-            <button @click="askForOracleUpdate()">ASK for oracle update</button>
+            Oracle is behind. Last update: {{ latestOracleUpdate }} <br/>
+            <UButton @click="askForOracleUpdate()">ASK for oracle update</UButton>
           </div>
           <div v-if="isOracleUpToDate">
-            <button @click="claimBounty()">CLAIM NOW.</button>
+            <UButton @click="claimBounty()">CLAIM NOW.</UButton>
           </div>
         </div>
         <div v-if="!isClaimable">Cannot claim PR not merged yet</div>
@@ -62,6 +62,8 @@ import { Contracts } from "~/abi/contracts";
 import { DevNFTABI } from "~/abi/devNft.abi";
 import { ReviewTokenABI } from "~/abi/reviewToken.abi";
 import { Octokit } from "@octokit/core";
+import { OracleABI } from "~/abi/oracle.abi";
+import type { ContractFunctionExecutionError, ContractFunctionRevertedError } from "viem";
 
 
 const props = defineProps<{
@@ -77,6 +79,7 @@ const repo = import.meta.env.VITE_API_TARGET_REPO;
 const octokit = new Octokit();
 
 
+const globalError = ref(false);
 const rewardTokenSymbol = ref("");
 
 const bountyReceiver = ref("");
@@ -86,6 +89,7 @@ const bountyReceiverAddress = ref("");
 // TODO: check PR status.
 const isClaimable = ref(true);
 const isOracleUpToDate = ref(false);
+const latestOracleUpdate = ref(0);
 
 const devTokenContract = getContract({
   address: Contracts.DevNFT,
@@ -95,6 +99,11 @@ const devTokenContract = getContract({
 const rewardTokenContract = getContract({
   address: Contracts.ReviewToken,
   abi: ReviewTokenABI,
+});
+
+const oracleContract = getContract({
+  address: Contracts.Oracle,
+  abi: OracleABI,
 });
 
 const isExpired =
@@ -111,22 +120,44 @@ const abortBounty = async () => {
 };
 
 const askForOracleUpdate = async () => {
-  // TODO - call requestPRUpdate on oracle contract.
+  // TODO: add fee for paymaster.
+  const {request} = await prepareWriteContract({
+    abi: OracleABI,
+    address: Contracts.Oracle,
+    functionName: "requestPRUpdate",
+    args: [
+      props.bounty.repositoryName,
+      props.bounty.pullRequestId
+    ]
+  });
+  await writeContract(request);
 };
 
 const claimBounty = async () => {
-  // TODO - call claim bounty on Bounty contract.
+  const {request} = await prepareWriteContract({
+    abi: BountyABI,
+    address: Contracts.Bounty,
+    functionName: "claimBounty",
+    args: [
+      props.bounty.bountyId,
+      prDetails.value
+    ]
+  });
+  await writeContract(request);
+
+  // TODO - add warning if you are not the receiver.
 };
 
-const prStatus = ref();
+const prDetails = ref();
+const prDetailsString = ref("");
 
 // Gets current PR state from github.
 // Afterwards we should check whether it matches the one that is in oracle.
 // But it only makes sense to compare after PR is merged.
 const getCurrentPRState = async () => {
   console.log("repo name is:", props.bounty.repositoryName);
-  const localPrStatus = await fetchPRStatusForOracle(octokit, props.bounty.repositoryName, Number(props.bounty.pullRequestId));
-  console.log("pr Status: ", localPrStatus);
+  const localPrDetails = await fetchPRStatusForOracle(octokit, props.bounty.repositoryName, Number(props.bounty.pullRequestId));
+  console.log("pr Status: ", localPrDetails);
 
   function replacer(key: string, value: any) {
     if (typeof value === 'bigint') {
@@ -136,12 +167,54 @@ const getCurrentPRState = async () => {
     }
   }
 
+  prDetails.value = localPrDetails;
   // temporary put this as string, as javascript doesn't know how to handle bigint.
-  const jsonString = JSON.stringify(localPrStatus, replacer);
-  prStatus.value = jsonString;
+  const jsonString = JSON.stringify(localPrDetails, replacer);
+  prDetailsString.value = jsonString;
+  return localPrDetails;
 };
 
-getCurrentPRState();
+
+const getRevertReason = (error: ContractFunctionExecutionError): string | undefined => {
+    const cause = error.cause;
+    if (cause.name == "ContractFunctionRevertedError") {
+      const c = cause as ContractFunctionRevertedError;
+      return c.reason;
+    }
+    console.log("Unexpected error from contract: ", error);
+    return undefined;
+}
+
+const compareWithOracle = async (prDetails: PRDetails) => {
+  oracleContract.read.verifyPRDetails([props.bounty.repositoryName, props.bounty.pullRequestId, prDetails]).then( _ => 
+    {
+      isOracleUpToDate.value = true;
+    }
+    
+  ).catch((e) => {
+
+    const error = e as ContractFunctionExecutionError;
+    isOracleUpToDate.value = false;
+    if (getRevertReason(error) == "State hash differs") {
+      // TODO: fetch & update the most recent oracle timestamp.
+
+      latestOracleUpdate.value = 11;
+
+
+    } else {
+      globalError.value = true;
+    }
+  });
+
+};
+
+
+getCurrentPRState().then(prDetails => {
+  // FIXME: uncomment
+  //isClaimable.value = prDetails.isMergedToMain;
+  compareWithOracle(prDetails);
+
+});
 
 
 
