@@ -146,6 +146,7 @@ describe("OracleBounty", function () {
         // This will fail due to out of gas (as oracleUpdater has no tokens).
         await expect(oracleUpdaterContract.updatePRState("repo1", 3, 99, details).then(tx => tx.wait())).to.be.reverted;
 
+        expect(await reviewerOracleContract.lastUpdated("repo1", 3)).to.be.equal(0);
 
         await reviewerOracleContract.requestPRUpdate("repo1", 3, {
             value: ethers.parseEther("0.01")
@@ -169,6 +170,8 @@ describe("OracleBounty", function () {
                 paymasterParams
             }
         }).then(tx => tx.wait());
+        expect(await reviewerOracleContract.lastUpdated("repo1", 3)).to.be.equal(150);
+
 
         // And now reviewer can get the bounty.
 

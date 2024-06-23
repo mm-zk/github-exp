@@ -113,6 +113,19 @@ contract GitHubOracle is IGitHubOracle, IPaymaster {
         emit PRStateUpdated(repository, prId, stateHash);
     }
 
+    // Timestamp when the oracle was last updated.
+    function lastUpdated(
+        string calldata repository,
+        uint256 prId
+    ) public view returns (uint64) {
+        return
+            uint64(
+                uint256(
+                    prStates[keccak256(abi.encodePacked(repository, prId))]
+                ) & 0xFFFFFFFFFFFFFFFF
+            );
+    }
+
     function verifyPRDetails(
         string calldata repository,
         uint256 prId,

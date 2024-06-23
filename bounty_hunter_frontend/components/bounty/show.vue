@@ -196,11 +196,11 @@ const compareWithOracle = async (prDetails: PRDetails) => {
     const error = e as ContractFunctionExecutionError;
     isOracleUpToDate.value = false;
     if (getRevertReason(error) == "State hash differs") {
-      // TODO: fetch & update the most recent oracle timestamp.
-
-      latestOracleUpdate.value = 11;
-
-
+      oracleContract.read.lastUpdated([props.bounty.repositoryName, props.bounty.pullRequestId]).then(
+        lastUpdated => {
+          latestOracleUpdate.value = Number(lastUpdated);
+        }
+      )
     } else {
       globalError.value = true;
     }

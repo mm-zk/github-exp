@@ -68,6 +68,30 @@ export const OracleABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "repository",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "prId",
+        "type": "uint256"
+      }
+    ],
+    "name": "lastUpdated",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "owner",
     "outputs": [
