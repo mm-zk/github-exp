@@ -2,6 +2,8 @@
   <ULandingCard title="Bounty" description="A bounty for PR" color="primary">
     PR: {{ props.bounty.repositoryName }} {{ props.bounty.pullRequestId }}
     <br />
+    Receiver: {{ bountyReceiver }} @ {{ bountyReceiverAddress }}
+    <br />
     Claimed: {{ props.bounty.claimed }} <br />
 
     <div v-if="!props.bounty.claimed">
@@ -77,6 +79,10 @@ const octokit = new Octokit();
 
 const rewardTokenSymbol = ref("");
 
+const bountyReceiver = ref("");
+const bountyReceiverAddress = ref("");
+
+
 // TODO: check PR status.
 const isClaimable = ref(true);
 const isOracleUpToDate = ref(false);
@@ -146,16 +152,18 @@ watch(
     await devTokenContract.read
       .ownerOf([bountyData.receiverNFTTokenId])
       .then((ownerAddress) => {
-        devTokenContract.read.balanceOf([ownerAddress]).then((data) => {
-          if (Number(data) > 0) {
-            // with the github tokenid being a keccak, I can't actually
-            // get the actual github username from the address side?
-          }
-        });
+        bountyReceiverAddress.value = ownerAddress;
+        
       })
       .catch((error) => {
         console.log("receiver doesnt have NFT yet");
       });
+
+    await devTokenContract.read
+      .tokenToGithub([bountyData.receiverNFTTokenId]).then((githublogin) => {
+        bountyReceiver.value = githublogin;
+      })
+
 
     rewardTokenSymbol.value = await rewardTokenContract.read.symbol();
   },
