@@ -152,8 +152,8 @@ const onCreate = async () => {
         rewardAmount.value.toString(),
         rewardTokenAddress,
         {
-          // FIXME: allow users to select this.
-          abortTimestamp: 10000,
+          // FIXME: allow users to select this. (for now set to 5 days)
+          abortTimestamp: BigInt(Math.floor(Date.now() / 1000) + 432000),
           receiverInvolvement: 0,
           degradationStartSeconds: 0,
           degradationEndSeconds: 0,
