@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "start": "ts-node src/main.ts",
+    "mint_nft": "ts-node src/minter/main.ts",
     "update_whitelist": "ts-node src/tools/update_whitelist.ts",
     "update_oracle": "ts-node src/oracle_updater/main.ts",
     "test": "jest"

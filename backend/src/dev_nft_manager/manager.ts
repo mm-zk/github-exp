@@ -1,6 +1,7 @@
 import { type Hex, parseAbi, WalletClient, PublicClient } from "viem";
 
 import * as dotenv from 'dotenv';
+import { Octokit } from "@octokit/core";
 const axios = require('axios');
 
 dotenv.config();
@@ -59,16 +60,13 @@ interface GithubComment {
 
 
 // Function to fetch comments for a given GitHub issue
-async function fetchComments(owner: string, repo: string, issueNumber: number) {
+async function fetchComments(octokit: Octokit, owner: string, repo: string, issueNumber: number) {
     try {
-        const commentsUrl = `https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}/comments`;
-        const headers = {
-            //'Authorization': `token ${authToken}`,
-            'Accept': 'application/vnd.github.v3+json'
-        };
-
-        const response = await axios.get(commentsUrl, { headers });
-        return response.data as GithubComment[];
+        return (await octokit.request('GET /repos/{owner}/{repo}/issues/{issueNumber}/comments', {
+            owner,
+            repo,
+            issueNumber
+        })).data as GithubComment[];
     } catch (error) {
         console.error('Error fetching comments:', error);
         return null;
@@ -93,18 +91,23 @@ function extractMintAddresses(comments: GithubComment[]) {
 let allAddresses = new Map();
 
 
-export async function mintNFTFromComments(owner: string, repo: string, issueNumber: number, walletClient: WalletClient, publicClient: any) {
-    const filteredAddresses = await fetchComments(owner, repo, issueNumber).then(
+export async function mintNFTFromComments(octokit: Octokit, owner: string, repo: string, issueNumber: number, walletClient: WalletClient, publicClient: any, whitelist: string[]) {
+    const filteredAddresses = await fetchComments(octokit, owner, repo, issueNumber).then(
         (comments) => {
             return extractMintAddresses(comments ?? []);
         }
     );
+    const authors = new Set(whitelist);
 
     filteredAddresses.forEach(async (value) => {
-        if (!allAddresses.has(value.user)) {
-            console.log(`Adding mapping: ${value.user} -> ${value.address}`);
-            allAddresses.set(value.user, value.address);
-            await mintNFT(value.user, value.address, walletClient, publicClient);
+        if (!authors.has(value.user)) {
+            console.log("Skipping ", value.user, " not on whitelist");
+        } else {
+            if (!allAddresses.has(value.user)) {
+                console.log(`Adding mapping: ${value.user} -> ${value.address}`);
+                allAddresses.set(value.user, value.address);
+                await mintNFT(value.user, value.address, walletClient, publicClient);
+            }
         }
     });
 }
