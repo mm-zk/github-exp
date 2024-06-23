@@ -175,7 +175,7 @@ export const fetchPRStatus = async (octokit: Octokit, repo: string, prNumber: nu
 
     return {
         author: prData.user.login,
-        isMergedToMain: prData.base.ref == "main" && prData.merged_at != null,
+        isMergedToMain: (prData.base.ref == "main" || prData.base.ref == "master") && prData.merged_at != null,
         reviewStatus,
     }
 }
