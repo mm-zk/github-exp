@@ -15,14 +15,7 @@
         <div v-if="isHunter">{{ userBalance }} RVW</div>
       </div>
       <div class="flex items-center gap-3">
-        <UButton color="primary" v-if="isHunter && userAddress">
-          <UIcon
-            class="w-6 h-6"
-            name="ph:coin-vertical"
-            dynamic
-            @click="giveCoin"
-          />
-        </UButton>
+        
         <UIcon
           v-if="isHunter"
           class="w-12 h-12 text-primary-800"
@@ -34,6 +27,12 @@
           label="Add"
           color="primary"
           @click="$emit('createHunter', ghUser.login)"
+        />
+        <UButton
+          v-if="showShowButton"
+          label="Show"
+          color="primary"
+          @click="goToHunterPage"
         />
       </div>
     </div>
@@ -49,7 +48,7 @@ import { ReviewTokenABI } from "~/abi/reviewToken.abi";
 
 defineEmits(["createHunter"]);
 
-const props = defineProps<{ ghUser: any }>();
+const props = defineProps<{ ghUser: any; showShowButton: boolean }>();
 const isHunter = ref(false);
 const userAddress = ref(null);
 const userBalance = ref(null);
@@ -91,6 +90,10 @@ watch(
   },
   { immediate: true }
 );
+
+const goToHunterPage = async () => {
+  window.location.href = "/hunter/" + props.ghUser.login;
+}
 
 const giveCoin = async () => {
   // am I really transferring tokens from the review token contract?

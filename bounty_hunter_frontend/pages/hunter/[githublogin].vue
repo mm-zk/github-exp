@@ -5,14 +5,13 @@
       <UDashboardToolbar class="py-0 px-4 overflow-x-auto">
         Browsing #{{ login }} github
       </UDashboardToolbar>
+      <div v-if="userData" class="m-4">
+        <HunterShow :ghUser="userData" />
+      </div>
       <div v-if="notMapped">
-        ADDRESS NOT Mapped - please visit
-        <button @click="goToIssue">github issue page</button> ({{
-          mappingAddress
-        }})
+        ADDRESS NOT Mapped - please click Add button above to connect link your wallet.
       </div>
       <div v-if="!notMapped">
-        Account is mapped to an NFT.<br />
         Current owner of this github is: {{ nftowner }} <br />
 
         <div v-if="account.isConnected">
@@ -27,8 +26,16 @@
         </div>
 
         <UCard>
+          <div v-if="userData" class="m-4">
+              <HunterShow :ghUser="userData" showShowButton=false />
+          </div>
           {{ nftowner }}
           <br />
+          <UIcon
+            class="w-12 h-12 text-green-600"
+            name="ph:coin-vertical-duotone"
+            dynamic
+          />
           RVW: {{ reviewTokens }}
         </UCard>
       </div>
@@ -114,6 +121,20 @@ publicClient.getBlock().then((block: any) => {
 });
 // const pageCount = 1;
 // const page = ref(1);
+
+const userData = ref(null);
+
+const getHunter = async () => {
+  const url = `https://api.github.com/users/${login}`;
+  userData.value = await fetch(url)
+    .then((res) => res.json())
+    .then((data) => {
+      return !!data.message ? null : data;
+    });
+};
+
+getHunter();
+
 
 const loadBountyData = async () => {
   bountyCount.value = Number(

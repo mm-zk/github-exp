@@ -15,7 +15,7 @@
           <HunterProfile />
         </UDashboardSection>
         <UDashboardSection
-          title="Manage Members"
+          title="View Members"
           description="Manage the users that are part of the bounty hunting program."
           orientation="horizontal"
           class="px-4 mt-6"
@@ -28,14 +28,7 @@
             />
           </template>
 
-          <template #links>
-            <UButton
-              label="Add a user"
-              color="primary"
-              @click="isInviteModalOpen = true"
-            />
-          </template>
-
+          
           <UCard
             :ui="{ header: { padding: 'p-4 sm:px-6' }, body: { padding: '' } }"
             class="min-w-0"
@@ -55,7 +48,7 @@
             </template>
 
             <div v-if="userData" class="m-4">
-              <HunterShow :ghUser="userData" @createHunter="createHunter" />
+              <HunterShow :ghUser="userData" @createHunter="createHunter" showShowButton=true />
             </div>
           </UCard>
         </UDashboardSection>
@@ -94,8 +87,13 @@ const searchHunter = async () => {
     });
 };
 
+const mappingAddress = import.meta.env.VITE_API_MAPPING_URL;
+
 const createHunter = async (ghUser: string) => {
-  isInviteModalOpen.value = true;
-  selectedUser.value = ghUser;
+  // Send user to github to add their address there.
+  window.location.href = mappingAddress;
+
+  //isInviteModalOpen.value = true;
+  //selectedUser.value = ghUser;
 };
 </script>

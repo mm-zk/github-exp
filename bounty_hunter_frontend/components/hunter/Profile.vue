@@ -1,6 +1,7 @@
 <template>
   <div v-if="account.isConnected">
-    <UCard>
+    <UCard >
+      {{ ghLogin }} <UButton>Show</UButton><br>
       {{ account.address }}
       <br />
       RVW: {{ reviewTokens }}
@@ -18,6 +19,7 @@ import { ReviewTokenABI } from "~/abi/reviewToken.abi";
 const { account } = storeToRefs(useWagmi());
 const isHunter = ref(false);
 const reviewTokens = ref(0);
+const ghLogin = ref(null);
 
 const devNFTContract = getContract({
   address: Contracts.DevNFT,
@@ -29,6 +31,8 @@ const reviewTokenContract = getContract({
   abi: ReviewTokenABI,
 });
 
+
+
 watch(
   () => account,
   async (newVal) => {
@@ -36,6 +40,9 @@ watch(
       const data = await devNFTContract.read.balanceOf([newVal.value.address]);
       if (Number(data) > 0) {
         isHunter.value = true;
+        // Currently we fetch only one.
+        const tokenId = await devNFTContract.read.tokenOfOwnerByIndex([newVal.value.address, 0n]);
+        ghLogin.value = await devNFTContract.read.tokenToGithub([tokenId]);
       }
 
       reviewTokens.value = Number(
