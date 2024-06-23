@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from "@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymaster.sol";
 import {TransactionHelper, Transaction} from "@matterlabs/zksync-contracts/l2/system-contracts/libraries/TransactionHelper.sol";
 import "@matterlabs/zksync-contracts/l2/system-contracts/Constants.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Reviewer that approved the pr.
 struct ApprovedReviewer {
@@ -32,8 +33,7 @@ interface IGitHubOracle {
     ) external view;
 }
 
-contract GitHubOracle is IGitHubOracle, IPaymaster {
-    address public owner;
+contract GitHubOracle is IGitHubOracle, IPaymaster, Ownable {
     mapping(address => bool) public authorizedUpdaters;
     // State variable to store the required gas
     uint public requiredGasForPRRequest;
@@ -55,13 +55,7 @@ contract GitHubOracle is IGitHubOracle, IPaymaster {
     event PRStateUpdated(string repository, uint256 prId, bytes32 stateHash);
 
     constructor() {
-        owner = msg.sender;
-        setAuthorization(owner, true);
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can perform this action");
-        _;
+        setAuthorization(msg.sender, true);
     }
 
     modifier onlyAuthorized() {
@@ -197,6 +191,6 @@ contract GitHubOracle is IGitHubOracle, IPaymaster {
 
     // Function to withdraw Ether from the contract, only callable by the owner
     function withdraw() public onlyOwner {
-        payable(owner).transfer(address(this).balance);
+        payable(owner()).transfer(address(this).balance);
     }
 }

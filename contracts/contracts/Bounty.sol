@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import {PRDetails, IGitHubOracle} from "./GithubOracle.sol";
 
 interface IERC20 {
@@ -139,7 +140,7 @@ function computeRewardPercentForBounty(
     return 0;
 }
 
-contract CodeReviewBounties {
+contract CodeReviewBounties is Ownable {
     struct Bounty {
         address sender;
         string repositoryName;
@@ -166,16 +167,7 @@ contract CodeReviewBounties {
     IGitHubOracle public gitHubOracle;
     ZKsyncDEVNFT public devNFT;
 
-    address public owner;
-
-    constructor() {
-        owner = msg.sender;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can perform this action");
-        _;
-    }
+    constructor() {}
 
     // Set the address of the GitHub Oracle
     function setGitHubOracleAddress(address oracleAddress) public onlyOwner {
