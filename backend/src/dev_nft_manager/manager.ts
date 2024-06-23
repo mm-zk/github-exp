@@ -99,7 +99,7 @@ export async function mintNFTFromComments(octokit: Octokit, owner: string, repo:
     );
     const authors = new Set(whitelist);
 
-    filteredAddresses.forEach(async (value) => {
+    for (const value of filteredAddresses) {
         if (!authors.has(value.user)) {
             console.log("Skipping ", value.user, " not on whitelist");
         } else {
@@ -109,5 +109,5 @@ export async function mintNFTFromComments(octokit: Octokit, owner: string, repo:
                 await mintNFT(value.user, value.address, walletClient, publicClient);
             }
         }
-    });
+    };
 }

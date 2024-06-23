@@ -6,6 +6,7 @@
     "mint_nft": "ts-node src/minter/main.ts",
     "update_whitelist": "ts-node src/tools/update_whitelist.ts",
     "update_oracle": "ts-node src/oracle_updater/main.ts",
+    "airdrop": "ts-node src/airdrop/main.ts",
     "test": "jest"
   },
   "dependencies": {
